@@ -33,23 +33,7 @@ df1.fillna(0, inplace=True)
 
 df_merge = pd.merge(df_main, df1, how='left')
 df_merge.fillna(0, inplace=True)
-print(df_merge)
+
 result = df_merge.to_json(orient='table')
 parser = loads(result)
 result_end = dumps(parser, indent=4, ensure_ascii=False)
-print(result_end)
-# >>>
-# {
-#             "index": 1719,
-#             "Заказ на сборку": "Заказ на производство 00000008745 от 03.11.2023 14:33:32",
-#             "Номенклатура": "231027-0.Столешница Кухня Павлов",
-#             "Заказано": 1.0,
-#             "Выпущено": 1.0,
-#             "Осталось выпустить": 0.0,
-#             "Цех раскроя для сборки": 0.0,
-#             "Цех раскроя для покраски": 0.0,
-#             "Цех покраски для сборки": 0.0,
-#             "Цех сборки": 0.0
-#         }
-
-
