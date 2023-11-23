@@ -43,7 +43,7 @@ if __name__ == '__main__':
     df2[coll_name1] = df2[coll_name1].apply(lambda x: x[len(x)-4:len(x)]) + df2[coll_name1].apply(lambda x: x[len(x)-18:len(x)-39])
     df2.fillna(0, inplace=True)
 
-    df_main = df_main.merge(df2, on=coll_name1)
+    df_main = df_main.merge(df2, how='left', on=coll_name1)
 
     df_main.to_excel('data/result.xlsx', index=False)
 
