@@ -163,3 +163,8 @@ cython_debug/
 /data
 data/
 data
+
+# Notebook
+/notebook
+notebook/
+notebook
