@@ -1,8 +1,6 @@
 import os
 import pandas as pd
 import openpyxl
-import json as js
-from json import loads, dumps
 
 from dotenv import load_dotenv
 from pathlib import Path
