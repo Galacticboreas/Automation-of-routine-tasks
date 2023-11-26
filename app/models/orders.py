@@ -1,4 +1,4 @@
-from sqlalchemy import Integer, String, Column, DateTime
+from sqlalchemy import Integer, String, Column, DateTime, ForeignKey
 from sqlalchemy.orm import DeclarativeBase
 from datetime import datetime
 
@@ -8,7 +8,7 @@ class Base(DeclarativeBase):
 
 
 class Order(Base):
-    __tablename__ = 'order'
+    __tablename__ = 'orders'
     id = Column(Integer, primary_key=True)
     composite_key = Column(String(8), nullable=False, index=True)
     order_date = Column(String())
@@ -22,3 +22,13 @@ class Order(Base):
     updated_on = Column(DateTime(),
                         default=datetime.now,
                         onupdate=datetime.now)
+
+
+class ReleaseAssemblyKits(Base):
+    __tablename__ = 'releaseofassemblykits'
+    id = Column(Integer(), primary_key=True)
+    cutting_shop_for_assembly = Column(Integer())
+    cutting_shop_for_painting = Column(Integer())
+    paint_shop_for_assembly = Column(Integer())
+    assembly_shop = Column(Integer())
+    orders_id = Column(Integer(), ForeignKey('orders.id'), index=True)

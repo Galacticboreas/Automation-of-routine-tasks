@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 from datetime import datetime
 
-from app import Base, Order
+from app import Base, Order, ReleaseAssemblyKits
 
 
 load_dotenv()
