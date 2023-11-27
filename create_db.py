@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 from pathlib import Path
 from datetime import datetime
 
-from app import Base, Order
+from app import Base, Order, ReleaseOfAssemblyKits
 
 
 load_dotenv()
@@ -78,6 +78,7 @@ session = Session(bind=engine)
 for _ in range(len(orders_json)):
     key = orders_json[_]['Составной ключ']
     order = Order()
+    releaseassemblykits = ReleaseOfAssemblyKits()
     order.composite_key = key
     order.order_date = orders_json[_]['Дата заказа']
     order.order_main = orders_json[_]['Номер заказа']
@@ -87,17 +88,17 @@ for _ in range(len(orders_json)):
     order.released = orders_json[_]['Выпущено']
     order.remains_to_release = orders_json[_]['Осталось выпустить']
     if kits_dict.get(key):
-        order.cutting_shop_for_assembly= kits_dict[key][0]
-        order.cutting_shop_for_painting = kits_dict[key][1]
-        order.paint_shop_for_assembly = kits_dict[key][2]
-        order.assembly_shop= kits_dict[key][3]
+        releaseassemblykits.cutting_shop_for_assembly = kits_dict[key][0]
+        releaseassemblykits.cutting_shop_for_painting = kits_dict[key][1]
+        releaseassemblykits.paint_shop_for_assembly = kits_dict[key][2]
+        releaseassemblykits.assembly_shop = kits_dict[key][3]
+        releaseassemblykits.order = order
     else:
-        order.cutting_shop_for_assembly= 0
-        order.cutting_shop_for_painting = 0
-        order.paint_shop_for_assembly = 0
-        order.assembly_shop= 0
+        releaseassemblykits.cutting_shop_for_assembly = 0
+        releaseassemblykits.cutting_shop_for_painting = 0
+        releaseassemblykits.paint_shop_for_assembly = 0
+        releaseassemblykits.assembly_shop = 0
+        releaseassemblykits.order = order
     session.add(order)
 
 session.commit()
-
-

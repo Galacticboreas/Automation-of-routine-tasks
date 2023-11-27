@@ -1,5 +1,5 @@
 from sqlalchemy import Integer, String, Column, DateTime, ForeignKey
-from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.orm import DeclarativeBase, relationship
 from datetime import datetime
 
 
@@ -22,7 +22,18 @@ class Order(Base):
     updated_on = Column(DateTime(),
                         default=datetime.now,
                         onupdate=datetime.now)
+    releaseofassemblykits = relationship("ReleaseOfAssemblyKits",
+                                         uselist=False,
+                                         back_populates="order")
+
+
+class ReleaseOfAssemblyKits(Base):
+    __tablename__ = "releaseassemblykits"
+    id = Column(Integer(), primary_key=True)
     cutting_shop_for_assembly = Column(Integer())
     cutting_shop_for_painting = Column(Integer())
     paint_shop_for_assembly = Column(Integer())
     assembly_shop = Column(Integer())
+    order_id = Column(Integer(), ForeignKey("orders.id"))
+    order = relationship("Order",
+                         back_populates="releaseofassemblykits")
