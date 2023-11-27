@@ -28,7 +28,7 @@ search_excpression = os.getenv('search_excpression')
 
 # Открываем файл с исходными данными по заказам и первый лист
 try:
-    with pd.ExcelFile(exl_file_path + exl_file_name, engine='openpyxl') as xls:
+    with pd.ExcelFile(exl_file_path + "/" + exl_file_name, engine='openpyxl') as xls:
         df_orders = pd.read_excel(xls, sheet1)
 except:
     print('По указанному пути файл не обнаружен')
@@ -46,7 +46,7 @@ df_orders.insert(2, 'Номер заказа', df_orders['Заказ на сбо
 
 # Получаем данные о выпусках подразделений с второго листа
 try:
-    with pd.ExcelFile(exl_file_path + exl_file_name, engine='openpyxl') as xls:
+    with pd.ExcelFile(exl_file_path + "/" + exl_file_name, engine='openpyxl') as xls:
         df_kits = pd.read_excel(xls, sheet2)
 except:
     print('По указанному пути файл не обнаружен')

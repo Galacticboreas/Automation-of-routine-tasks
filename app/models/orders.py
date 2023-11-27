@@ -24,7 +24,8 @@ class Order(Base):
                         onupdate=datetime.now)
     releaseofassemblykits = relationship("ReleaseOfAssemblyKits",
                                          uselist=False,
-                                         back_populates="order")
+                                         back_populates="order",
+                                         cascade="all, delete")
 
 
 class ReleaseOfAssemblyKits(Base):
