@@ -23,6 +23,7 @@ sheet1 = os.getenv('sheet1')
 sheet2 = os.getenv('sheet2')
 sheet3 = os.getenv('sheet3')
 sheet4 = os.getenv('sheet4')
+company = os.getenv('company')
 coll_name1 = os.getenv('coll_name1')
 search_excpression = os.getenv('search_excpression')
 
@@ -60,15 +61,51 @@ df_kits.insert(0, 'Составной ключ', df_kits['Заказ на сбо
 df_kits = df_kits.drop('Заказ на сборку', axis=1)
 df_kits = df_kits.drop('Номенклатура', axis=1)
 
+with pd.ExcelFile(exl_file_path + "/" + exl_file_name, engine='openpyxl') as xls:
+    df_devision = pd.read_excel(xls, sheet4)
+
+df_devision = df_devision[df_devision['Организация'].str.contains(company)]
+df_devision.fillna(0, inplace=True)
+
+convert_coll = ['Номер', 'Дата', 'Дата запуска', 'Дата исполнения']
+df_devision[convert_coll] = df_devision[convert_coll].astype('string')
+
+df_devision['Номер'] = df_devision['Номер'].apply(lambda x: x.zfill(4))
+
+df_devision.insert(0, "Составной ключ", df_devision['Дата'].apply(lambda x: x[6:10]) + df_devision['Номер'])
+
+df_div_main = df_devision[df_devision['Основной заказ на производство'] == 0]
+df_div_main = df_div_main.drop(['Номер', 'Организация', 'Основной заказ на производство'], axis=1)
+
+convert_coll = ['Основной заказ на производство']
+df_devision[convert_coll] = df_devision[convert_coll].astype('string')
+df_div_add = df_devision[df_devision[convert_coll[0]].str.contains(search_excpression)]
+df_div_add = df_div_add.drop('Составной ключ', axis=1)
+df_div_add.insert(0, 'Составной ключ', df_div_add[convert_coll[0]].apply(lambda x: x[43:47]) + df_div_add[convert_coll[0]].apply(lambda x: x[29:33]))
+drop_coll = ['Организация', 'Основной заказ на производство']
+df_div_add = df_div_add.drop(drop_coll, axis=1)
+
 # Записываем данные в формате json
 kits_json = df_kits.to_json(orient='split', force_ascii=False)
 orders_json = df_orders.to_json(orient='records', force_ascii=False)
+df_div_main = df_div_main.to_json(orient='split', force_ascii=False)
+df_div_add = df_div_add.to_json(orient='split', force_ascii=False)
 
 # Преобразуем в словарь
 kits_json = eval(kits_json)
-kits_json = kits_json['data']
-kits_dict = {item[0]: item[1:] for item in kits_json}
 orders_json = eval(orders_json)
+df_div_main = eval(df_div_main)
+df_div_add = eval(df_div_add)
+
+# Извлекаем данные
+df_div_main = df_div_main['data']
+df_div_add = df_div_add['data']
+kits_json = kits_json['data']
+
+# Преобразуем в словарь
+kits_dict = {item[0]: item[1:] for item in kits_json}
+df_div_main = {item[0]: item[1:] for item in df_div_main}
+df_div_add = {item[0]: item[1:] for item in df_div_add}
 
 engine = create_engine('sqlite:///data/orders.db')
 Base.metadata.drop_all(engine)
