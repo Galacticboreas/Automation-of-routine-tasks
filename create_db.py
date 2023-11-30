@@ -10,7 +10,8 @@ from dotenv import load_dotenv
 from pathlib import Path
 from datetime import datetime
 
-from app import Base, Order, ReleaseOfAssemblyKits
+from app import Base, Order, ReleaseOfAssemblyKits, \
+                DescriptionMainOrder, DescriptionAdditionalOrder
 
 
 load_dotenv()
@@ -39,6 +40,7 @@ except:
 # Сортируем по ключевому слову
 df_orders = df_orders[df_orders[coll_name1].str.contains(search_excpression)]
 df_orders.fillna(0, inplace=True)
+
 # Получаем исходные заказы и добавляем колонки:
 # Составной ключ        - колонка №1
 # Дата заказа           - колонка №2
@@ -50,8 +52,10 @@ df_orders.insert(2, 'Номер заказа', df_orders['Заказ на сбо
 # Сортируем по ключевому слову
 df_kits = df_kits[df_kits[coll_name1].str.contains(search_excpression)]
 df_kits.fillna(0, inplace=True)
+
 # Добавляем колонку с составным ключем
 df_kits.insert(0, 'Составной ключ', df_kits['Заказ на сборку'].apply(lambda x: x[43:47]) + df_kits['Заказ на сборку'].apply(lambda x: x[29:33]))
+
 # Удаляем лишние колонки
 df_kits = df_kits.drop('Заказ на сборку', axis=1)
 df_kits = df_kits.drop('Номенклатура', axis=1)
@@ -99,15 +103,21 @@ kits_dict = {item[0]: item[1:] for item in kits_json}
 df_div_main = {item[0]: item[1:] for item in df_div_main}
 df_div_add = {item[0]: item[1:] for item in df_div_add}
 
+# Создаем таблицы в БД
 engine = create_engine('sqlite:///data/orders.db')
 Base.metadata.drop_all(engine)
 Base.metadata.create_all(engine)
 session = Session(bind=engine)
 
+# Наполняем таблицы данными из листов Excel
 for _ in range(len(orders_json)):
     key = orders_json[_]['Составной ключ']
     order = Order()
     releaseassemblykits = ReleaseOfAssemblyKits()
+    descr_main_oreder = DescriptionMainOrder()
+    descr_addi_order = DescriptionAdditionalOrder()
+    
+    # Заполняем таблицу с основным заказом
     order.composite_key = key
     order.order_date = orders_json[_]['Дата заказа']
     order.order_main = orders_json[_]['Номер заказа']
@@ -116,6 +126,8 @@ for _ in range(len(orders_json)):
     order.oredered = orders_json[_]['Заказано']
     order.released = orders_json[_]['Выпущено']
     order.remains_to_release = orders_json[_]['Осталось выпустить']
+
+    # Заполняем таблицу с комплектами для сборки
     if kits_dict.get(key):
         releaseassemblykits.cutting_shop_for_assembly = kits_dict[key][0]
         releaseassemblykits.cutting_shop_for_painting = kits_dict[key][1]
@@ -128,6 +140,18 @@ for _ in range(len(orders_json)):
         releaseassemblykits.paint_shop_for_assembly = 0
         releaseassemblykits.assembly_shop = 0
         releaseassemblykits.order = order
+    
+    # Заполняем таблицу с подразделением и комментарием по заказу
+    if df_div_main.get(key):
+        pass
+    else:
+        pass
+
+    # Заполняем таблицу с описанием дополнительных заказов
+    if df_div_add.get(key):
+        pass
+    else:
+        pass
     session.add(order)
 
 session.commit()
