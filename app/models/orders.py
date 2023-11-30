@@ -24,13 +24,13 @@ class Order(Base):
                                          uselist=False,
                                          back_populates="order",
                                          cascade="all, delete")
-    # descriptionmainorder = relationship("DescriptionMainOrder",
-    #                                     uselist=False,
-    #                                     back_populates='order',
-    #                                     cascade="all, delete")
-    # descriptionadditionalorder = relationship("DescriptionAdditionalOrder",
-    #                                           back_populates="order",
-    #                                           cascade="all, delete")
+    descriptionmainorder = relationship("DescriptionMainOrder",
+                                        uselist=False,
+                                        back_populates='order',
+                                        cascade="all, delete")
+    descriptionadditionalorder = relationship("DescriptionAdditionalOrder",
+                                              back_populates="order",
+                                              cascade="all, delete")
 
 
 class ReleaseOfAssemblyKits(Base):
@@ -44,27 +44,27 @@ class ReleaseOfAssemblyKits(Base):
     order = relationship("Order", back_populates="releaseofassemblykits")
 
 
-# class DescriptionMainOrder(Base):
-#     __tablename__ = 'descriptiosnmainorders'
-#     id = Column(Integer(), primary_key=True, index=True)
-#     organization = Column(String())
-#     division = Column(String())
-#     date_launch = Column(String())
-#     date_execution = Column(String())
-#     responsible = Column(String())
-#     comment = Column(String())
-#     order_id = Column(Integer(), ForeignKey("orders.id"))
-#     order = relationship("Order", back_populates="descriptionmainorder")
+class DescriptionMainOrder(Base):
+    __tablename__ = 'descriptiosnmainorders'
+    id = Column(Integer(), primary_key=True, index=True)
+    organization = Column(String())
+    division = Column(String())
+    date_launch = Column(String())
+    date_execution = Column(String())
+    responsible = Column(String())
+    comment = Column(String())
+    order_id = Column(Integer(), ForeignKey("orders.id"))
+    order = relationship("Order", back_populates="descriptionmainorder")
 
 
-# class DescriptionAdditionalOrder(Base):
-#     __tablename__ = "descriptionsadditionalorders"
-#     id = Column(Integer(), primary_key=True, index=True)
-#     organization = Column(String())
-#     division = Column(String())
-#     date_launch = Column(String())
-#     date_execution = Column(String())
-#     responsible = Column(String())
-#     comment = Column(String())
-#     order_id = Column(Integer(), ForeignKey("orders.id"))
-#     order = relationship("Order", back_populates="orders")
+class DescriptionAdditionalOrder(Base):
+    __tablename__ = "descriptionsadditionalorders"
+    id = Column(Integer(), primary_key=True, index=True)
+    organization = Column(String())
+    division = Column(String())
+    date_launch = Column(String())
+    date_execution = Column(String())
+    responsible = Column(String())
+    comment = Column(String())
+    order_id = Column(Integer(), ForeignKey("orders.id"))
+    order = relationship("Order", back_populates="descriptionadditionalorder")
