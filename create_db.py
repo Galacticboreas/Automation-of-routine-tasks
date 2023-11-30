@@ -31,6 +31,8 @@ search_excpression = os.getenv('search_excpression')
 try:
     with pd.ExcelFile(exl_file_path + "/" + exl_file_name, engine='openpyxl') as xls:
         df_orders = pd.read_excel(xls, sheet1)
+        df_kits = pd.read_excel(xls, sheet2)
+        df_devision = pd.read_excel(xls, sheet4)
 except:
     print('По указанному пути файл не обнаружен')
 
@@ -45,13 +47,6 @@ df_orders.insert(0, 'Составной ключ', df_orders['Заказ на с
 df_orders.insert(1, 'Дата заказа', df_orders['Заказ на сборку'].apply(lambda x: x[37:47]))
 df_orders.insert(2, 'Номер заказа', df_orders['Заказ на сборку'].apply(lambda x: x[29:33]))
 
-# Получаем данные о выпусках подразделений с второго листа
-try:
-    with pd.ExcelFile(exl_file_path + "/" + exl_file_name, engine='openpyxl') as xls:
-        df_kits = pd.read_excel(xls, sheet2)
-except:
-    print('По указанному пути файл не обнаружен')
-
 # Сортируем по ключевому слову
 df_kits = df_kits[df_kits[coll_name1].str.contains(search_excpression)]
 df_kits.fillna(0, inplace=True)
@@ -60,9 +55,6 @@ df_kits.insert(0, 'Составной ключ', df_kits['Заказ на сбо
 # Удаляем лишние колонки
 df_kits = df_kits.drop('Заказ на сборку', axis=1)
 df_kits = df_kits.drop('Номенклатура', axis=1)
-
-with pd.ExcelFile(exl_file_path + "/" + exl_file_name, engine='openpyxl') as xls:
-    df_devision = pd.read_excel(xls, sheet4)
 
 df_devision = df_devision[df_devision['Организация'].str.contains(company)]
 df_devision.fillna(0, inplace=True)
