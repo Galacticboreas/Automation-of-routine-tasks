@@ -28,9 +28,8 @@ class Order(Base):
                                         uselist=False,
                                         back_populates='order',
                                         cascade="all, delete")
-    descriptionadditionalorder = relationship("DescriptionAdditionalOrder",
-                                              back_populates="order",
-                                              cascade="all, delete")
+    descriptions = relationship("DescriptionAdditionalOrder",
+                                back_populates='order')
 
 
 class ReleaseOfAssemblyKits(Base):
@@ -47,7 +46,6 @@ class ReleaseOfAssemblyKits(Base):
 class DescriptionMainOrder(Base):
     __tablename__ = 'descriptiosnmainorders'
     id = Column(Integer(), primary_key=True, index=True)
-    organization = Column(String())
     division = Column(String())
     date_launch = Column(String())
     date_execution = Column(String())
@@ -58,13 +56,14 @@ class DescriptionMainOrder(Base):
 
 
 class DescriptionAdditionalOrder(Base):
-    __tablename__ = "descriptionsadditionalorders"
+    __tablename__ = "descriptions"
     id = Column(Integer(), primary_key=True, index=True)
-    organization = Column(String())
+    date_create = Column(String())
+    order_number = Column(String())
     division = Column(String())
     date_launch = Column(String())
     date_execution = Column(String())
     responsible = Column(String())
     comment = Column(String())
     order_id = Column(Integer(), ForeignKey("orders.id"))
-    order = relationship("Order", back_populates="descriptionadditionalorder")
+    order = relationship("Order", back_populates="descriptions")

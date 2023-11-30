@@ -5,6 +5,7 @@ import pandas as pd
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from collections import defaultdict
 from json import loads, dumps
 from dotenv import load_dotenv
 from pathlib import Path
@@ -81,27 +82,43 @@ df_div_add.insert(0, 'Составной ключ', df_div_add[convert_coll[0]].
 drop_coll = ['Организация', 'Основной заказ на производство']
 df_div_add = df_div_add.drop(drop_coll, axis=1)
 
+df_div_add_result = defaultdict(list)
+for index, row in df_div_add.iterrows():
+    key = row['Составной ключ']
+    if df_div_add_result.get(key):
+        df_div_add_result[key].append([row['Дата'],
+                                      row['Номер'],
+                                      row['Подразделение'],
+                                      row['Дата запуска'],
+                                      row['Дата исполнения'],
+                                      row['Ответственный'],
+                                      row['Комментарий']])
+    else:
+        df_div_add_result[key].append([row['Дата'],
+                                      row['Номер'],
+                                      row['Подразделение'],
+                                      row['Дата запуска'],
+                                      row['Дата исполнения'],
+                                      row['Ответственный'],
+                                      row['Комментарий']])
+
 # Записываем данные в формате json
 kits_json = df_kits.to_json(orient='split', force_ascii=False)
 orders_json = df_orders.to_json(orient='records', force_ascii=False)
 df_div_main = df_div_main.to_json(orient='split', force_ascii=False)
-df_div_add = df_div_add.to_json(orient='split', force_ascii=False)
 
 # Преобразуем в словарь
 kits_json = eval(kits_json)
 orders_json = eval(orders_json)
 df_div_main = eval(df_div_main)
-df_div_add = eval(df_div_add)
 
 # Извлекаем данные
 df_div_main = df_div_main['data']
-df_div_add = df_div_add['data']
 kits_json = kits_json['data']
 
 # Преобразуем в словарь
 kits_dict = {item[0]: item[1:] for item in kits_json}
 df_div_main = {item[0]: item[1:] for item in df_div_main}
-df_div_add = {item[0]: item[1:] for item in df_div_add}
 
 # Создаем таблицы в БД
 engine = create_engine('sqlite:///data/orders.db')
@@ -115,7 +132,6 @@ for _ in range(len(orders_json)):
     order = Order()
     releaseassemblykits = ReleaseOfAssemblyKits()
     descr_main_oreder = DescriptionMainOrder()
-    descr_addi_order = DescriptionAdditionalOrder()
     
     # Заполняем таблицу с основным заказом
     order.composite_key = key
@@ -143,15 +159,42 @@ for _ in range(len(orders_json)):
     
     # Заполняем таблицу с подразделением и комментарием по заказу
     if df_div_main.get(key):
-        pass
+        descr_main_oreder.division = df_div_main[key][0]
+        descr_main_oreder.date_launch = df_div_main[key][1]
+        descr_main_oreder.date_execution = df_div_main[key][2]
+        descr_main_oreder.responsible = df_div_main[key][3]
+        descr_main_oreder.comment = df_div_main[key][4]
+        descr_main_oreder.order = order
     else:
-        pass
+        descr_main_oreder.division = ""
+        descr_main_oreder.date_launch = ""
+        descr_main_oreder.date_execution = ""
+        descr_main_oreder.responsible = ""
+        descr_main_oreder.comment = ""
+        descr_main_oreder.order = order
 
     # Заполняем таблицу с описанием дополнительных заказов
-    if df_div_add.get(key):
-        pass
+    if df_div_add_result.get(key):
+        for _ in range(len(df_div_add_result[key])):
+            descr_addi_order = DescriptionAdditionalOrder()
+            descr_addi_order.date_create = df_div_add_result[key][_][0]
+            descr_addi_order.order_number = df_div_add_result[key][_][1]
+            descr_addi_order.division = df_div_add_result[key][_][2]
+            descr_addi_order.date_launch = df_div_add_result[key][_][3]
+            descr_addi_order.date_execution = df_div_add_result[key][_][4]
+            descr_addi_order.responsible = df_div_add_result[key][_][5]
+            descr_addi_order.comment = df_div_add_result[key][_][6]
+            descr_addi_order.order = order
     else:
-        pass
+        descr_addi_order = DescriptionAdditionalOrder()
+        descr_addi_order.date_create = ""
+        descr_addi_order.order_number = ""
+        descr_addi_order.division = ""
+        descr_addi_order.date_launch = ""
+        descr_addi_order.date_execution = ""
+        descr_addi_order.responsible = ""
+        descr_addi_order.comment = ""
+        descr_addi_order.order = order
     session.add(order)
 
 session.commit()
