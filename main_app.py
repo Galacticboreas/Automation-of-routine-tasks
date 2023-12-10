@@ -18,7 +18,8 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Черновая заготовка основного меню")
+        self.setGeometry(200, 200, 600, 400)
+        self.setWindowTitle("Работа с исходными данными")
 
         self.label = QLabel("Панель инструментов")
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -50,7 +51,7 @@ class MainWindow(QMainWindow):
 
         self.menu = self.menuBar()
 
-        self.file_menu = self.menu.addMenu("&File")
+        self.file_menu = self.menu.addMenu("&Файл")
         self.file_menu.addAction(self.button_action)
         self.file_menu.addSeparator()
         self.file_menu.addAction(self.button_action2)
