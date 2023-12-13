@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import (
     QWidget,
 )
 
-from gui.anotherwindow import AnotherWindow
+from app.gui.anotherwindow import AnotherWindow
 
 
 class MainWindow(QMainWindow):

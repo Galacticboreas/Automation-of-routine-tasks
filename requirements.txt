@@ -18,4 +18,4 @@ xlwt
 pytrends
 pyxlsb
 python-dotenv
-PySide6
+PyQt6
