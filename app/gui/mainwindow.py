@@ -35,9 +35,8 @@ class MainWindow(QMainWindow):
             "&Открыть исходный файл",
             self
         )
-        button_file_open.setStatusTip("Открыть исходный файл тект")
         button_file_open.triggered.connect(self.open_source_file)
-
+        
         menu = self.menuBar()
 
         file_menu = menu.addMenu("&File")
