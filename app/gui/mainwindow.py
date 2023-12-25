@@ -33,14 +33,23 @@ class MainWindow(QMainWindow):
         button_file_open = QAction(
             QIcon("resource/icons/android.png"),
             "&Открыть исходный файл",
-            self
+            self,
         )
         button_file_open.triggered.connect(self.open_source_file)
+        
+        button_collect_db_consumption_per_one_product = QAction(
+            "&Собрать БД расход на одно изделие",
+            self,
+        )
+        button_collect_db_consumption_per_one_product.triggered.connect(
+            self.collect_db_consumption_per_one_product
+        )
         
         menu = self.menuBar()
 
         file_menu = menu.addMenu("&File")
         file_menu.addAction(button_file_open)
+        file_menu.addAction(button_collect_db_consumption_per_one_product)
 
         w = QWidget()
         w.setLayout(layout)
@@ -57,3 +66,9 @@ class MainWindow(QMainWindow):
         dlg.setWindowTitle("Вызвать меню открытия файла с исходными данными")
         dlg.setText("Открываем файл с исходными данными")
         button_file_open = dlg.exec()
+    
+    def collect_db_consumption_per_one_product(self, event):
+        dlg = QMessageBox(self)
+        dlg.setWindowTitle("Собрать БД материалы расх. на 1 изд.")
+        dlg.setText("Открываем файл с выгрузкой данных")
+        button_collect_db_consumption_per_one_product = dlg.exec()
