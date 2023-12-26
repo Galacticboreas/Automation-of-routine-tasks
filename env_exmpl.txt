@@ -8,7 +8,7 @@ coll_name1
 search_excpression
 company
 
-exl_file_dir=
+exl_file_dir
 file_name_coll_db_cons_per_one_prod
 file_name_orders
 sheet_main

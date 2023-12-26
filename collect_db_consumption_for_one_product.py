@@ -107,6 +107,39 @@ for i in orders_data.keys():
     article = orders_data[i][0][1]
     extractor.get_article(article)
 
-print(extractor.get_num_extract_articles())
-print(extractor.articles)
-print(extractor.get_num_of_iter())
+# Заполнякм колонку с изделием
+def lambdafunc(row):
+    if row:
+        return row[0][1]
+    return 0
+
+df_all_categories['Изделие'] = df_all_categories.apply(lambda row: lambdafunc(orders_data.get(row['Заказ на производство'])), axis=True)
+
+# Извлекаем артикул из наименования изделия
+def insert_article(row):
+    article = extractor.get_article(str(row['Изделие']))
+    return article
+
+df_all_categories.insert(0, 'Артикул изделия', df_all_categories.apply(insert_article, axis=True))
+
+# Заполнякм колонку "Заказано" количеством из заказа на производство
+def lambdafunc(row):
+    if row:
+        return row[0][0]
+    return 0
+
+df_all_categories.insert(7, 'Заказано', df_all_categories.apply(lambda row: lambdafunc(orders_data.get(row['Заказ на производство'])), axis=True))
+
+# Расчитываем расход материала на 1 изделие мебели
+df_all_categories['Расход на 1 изделие'] = df_all_categories['Количество'] / (df_all_categories['Заказано'] + .000000001)
+
+# Удаляем лишние колонки
+df_all_categories = df_all_categories.drop('N', axis=True)
+df_all_categories = df_all_categories.drop('Заказ на производство', axis=True)
+df_all_categories = df_all_categories.drop('Заказано', axis=True)
+df_all_categories = df_all_categories.drop('Номенклатура до замены', axis=True)
+df_all_categories = df_all_categories.drop('Количество', axis=True)
+df_all_categories = df_all_categories.drop('Количество до замены', axis=True)
+
+# Записываем результат в файл Excel
+df_all_categories.to_excel(exl_file_dir + exl_file_path + 'Расход на 1 изделие.xlsx', index=False)
