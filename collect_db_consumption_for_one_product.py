@@ -61,7 +61,7 @@ for i in orders_data.keys():
     article = orders_data[i][0][1]
     extractor.get_article(article)
 
-# Заполнякм колонку с изделием
+# Заполняем колонку с изделием
 def lambdafunc(row):
     if row:
         return row[0][1]
@@ -76,7 +76,7 @@ def insert_article(row):
 
 df_all_categories.insert(0, 'Артикул изделия', df_all_categories.apply(insert_article, axis=True))
 
-# Заполнякм колонку "Заказано" количеством из заказа на производство
+# Заполняем колонку "Заказано" количеством из заказа на производство
 def lambdafunc(row):
     if row:
         return row[0][0]
@@ -84,7 +84,7 @@ def lambdafunc(row):
 
 df_all_categories.insert(7, 'Заказано', df_all_categories.apply(lambda row: lambdafunc(orders_data.get(row['Заказ на производство'])), axis=True))
 
-# Расчитываем расход материала на 1 изделие мебели
+# Расчитываем расход материала на 1 изделие мебели и добавляем колонку "Расход на 1 изделие"
 df_all_categories['Расход на 1 изделие'] = df_all_categories['Количество'] / (df_all_categories['Заказано'] + .000000001)
 
 # Удаляем лишние колонки
