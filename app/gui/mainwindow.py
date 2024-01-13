@@ -1,11 +1,6 @@
 from PyQt6.QtGui import QAction, QIcon
-from PyQt6.QtWidgets import (
-    QMainWindow,
-    QPushButton,
-    QMessageBox,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt6.QtWidgets import (QMainWindow, QMessageBox, QPushButton,
+                             QVBoxLayout, QWidget)
 
 from app.gui.anotherwindow import AnotherWindow
 
@@ -36,7 +31,7 @@ class MainWindow(QMainWindow):
             self,
         )
         button_file_open.triggered.connect(self.open_source_file)
-        
+
         button_collect_db_consumption_per_one_product = QAction(
             "&Собрать БД расход на одно изделие",
             self,
@@ -44,7 +39,7 @@ class MainWindow(QMainWindow):
         button_collect_db_consumption_per_one_product.triggered.connect(
             self.collect_db_consumption_per_one_product
         )
-        
+
         menu = self.menuBar()
 
         file_menu = menu.addMenu("&File")
@@ -60,15 +55,15 @@ class MainWindow(QMainWindow):
             window.hide()
         else:
             window.show()
-    
+
     def open_source_file(self, event):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Вызвать меню открытия файла с исходными данными")
         dlg.setText("Открываем файл с исходными данными")
-        button_file_open = dlg.exec()
-    
+        self.button_file_open = dlg.exec()
+
     def collect_db_consumption_per_one_product(self, event):
         dlg = QMessageBox(self)
         dlg.setWindowTitle("Собрать БД материалы расх. на 1 изд.")
         dlg.setText("Открываем файл с выгрузкой данных")
-        button_collect_db_consumption_per_one_product = dlg.exec()
+        self.button_collect_db_consumption_per_one_product = dlg.exec()

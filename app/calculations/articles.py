@@ -8,7 +8,7 @@ class ArticleExtractor:
         if self.articles.get(name):
             return self.articles[name]
         return self.__extract_atricle(name)
-    
+
     def __extract_atricle(self, name):
         num_of_occur = name.count(")")
         temp_name = name
@@ -30,18 +30,18 @@ class ArticleExtractor:
                 temp_name = temp_name[:num_left] + temp_name[num_left + 1:]
         self.articles[name] = name
         return name
-    
+
     def get_num_char(self, name):
         num_right = name.rfind(")")
         num_left = name.rfind("(") + 1
         return num_right - num_left
-    
+
     def get_symbol(self, name):
         return name[name.rfind("(") + 1: name.rfind(")")]
 
     def get_num_extract_articles(self):
         return len(self.articles)
-    
+
     def get_num_of_iter(self):
         return self.num_of_iter
 
