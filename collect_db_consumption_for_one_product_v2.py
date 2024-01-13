@@ -1,6 +1,5 @@
 import configparser
 from collections import defaultdict
-from dataclasses import dataclass
 
 from openpyxl import Workbook, load_workbook
 
