@@ -1,12 +1,10 @@
 import configparser
-
-
-from openpyxl import Workbook
-from openpyxl import load_workbook
-from dataclasses import dataclass
 from collections import defaultdict
+from dataclasses import dataclass
 
-from app import ArticleExtractor
+from openpyxl import Workbook, load_workbook
+
+from app import ArticleExtractor, OrderData
 
 config = configparser.ConfigParser()
 
@@ -14,12 +12,16 @@ config.read('settings.ini', encoding='utf8')
 
 exl_file_dir = config['DEFAULT']['Path_dir']
 exl_data_dir = config['DEFAULT']['Path_data']
-exl_file_name = config['DEFAULT']['File_name_orders']
+exl_file_name = config['DEFAULT']['File_name_orders1']
 sheet_main = config['DEFAULT']['Sheet_main']
 exl_file = exl_file_dir + exl_data_dir + exl_file_name
 
 
-workbook = load_workbook(filename=exl_file, read_only=True, data_only=True)
+workbook = load_workbook(
+    filename=exl_file,
+    read_only=True,
+    data_only=True
+    )
 
 sheet = workbook[sheet_main]
 ordered_data = defaultdict(list)
@@ -41,27 +43,20 @@ for value in sheet.iter_rows(min_row=7,
             ]
         )
 
-sheet_name_categ = config['upload.name_sheet.first_path_name']['Sheet_all_categories']
-sheet_name_status = config['upload.name_sheet.second_path_name']['Forecast']
+sheet_name_categ = config['Sheet.name']['Sheet_all_categories']
+sheet_name_status = config['Sheet.name']['Forecast']
 sheet_name = sheet_name_categ + " " + sheet_name_status
 
-exl_file_name = config['DEFAULT']['File_name']
+exl_file_name = config['DEFAULT']['File_name_source_db_1']
 exl_file = exl_file_dir + exl_data_dir + exl_file_name
 
-workbook = load_workbook(filename=exl_file,
-                        read_only=True,
-                        data_only=True)
+workbook = load_workbook(
+    filename=exl_file,
+    read_only=True,
+    data_only=True
+    )
 
 sheet = workbook[sheet_name]
-
-@dataclass
-class OrderData:
-    furniture_article: str
-    furniture_name: str
-    material_code: str
-    material_article: str
-    material_name: str
-    consumption_per_1_product: float
 
 materials = []
 
@@ -79,7 +74,7 @@ for value in sheet.iter_rows(min_row=2,
         consumption_per_order = ordered_data[key][0][2] if ordered_data[key][0][2] else 0
         try:
             consumption_per_1_product = material_amount / consumption_per_order
-        except:
+        except ZeroDivisionError:
             consumption_per_1_product = 0
         material = OrderData(
             furniture_article=furniture_article,
@@ -95,6 +90,7 @@ len(materials)
 workbook = Workbook()
 
 sheet = workbook.active
+sheet.title = sheet_name
 
 sheet.append([
     "Артикул",
@@ -103,7 +99,7 @@ sheet.append([
     "Артикул материала",
     "Наименование материала",
     "Расход на 1 изделие",
-])
+    ])
 
 for material in materials:
     data = [
@@ -116,4 +112,6 @@ for material in materials:
     ]
     sheet.append(data)
 
-workbook.save(filename=exl_file_dir + exl_data_dir + 'Расход на 1 изделие.xlsx')
+workbook.save(
+    filename=exl_file_dir + exl_data_dir + 'Расход на 1 изделие.xlsx'
+    )

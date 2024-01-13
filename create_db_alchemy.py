@@ -1,9 +1,8 @@
 import os
-import pandas as pd
-import openpyxl
-
-from dotenv import load_dotenv
 from pathlib import Path
+
+import pandas as pd
+from dotenv import load_dotenv
 
 load_dotenv()
 env_path = Path('.')/'.env'

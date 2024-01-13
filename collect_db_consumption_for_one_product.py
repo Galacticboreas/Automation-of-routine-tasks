@@ -1,13 +1,11 @@
 import os
-import pandas as pd
-import openpyxl as opxl
-
-from pathlib import Path
-from dotenv import load_dotenv
 from collections import defaultdict
+from pathlib import Path
+
+import pandas as pd
+from dotenv import load_dotenv
 
 from app import ArticleExtractor
-
 
 load_dotenv()
 env_path = Path('.')/'.env'
@@ -30,7 +28,7 @@ sheet1 = sheet_all_cat + " " + forecast
 try:
     with pd.ExcelFile(exl_file_dir + exl_file_path + exl_file_name, engine='openpyxl') as xls:
         df_all_categories = pd.read_excel(xls, sheet1)
-except:
+except FileNotFoundError:
     print('По указанному пути файл не обнаружен')
 df_all_categories.fillna(0, inplace=True)
 
@@ -39,12 +37,12 @@ sheet1 = sheet_main
 try:
     with pd.ExcelFile(exl_file_dir + exl_file_path + exl_file_name_orders, engine='openpyxl') as xls:
         df_orders = pd.read_excel(xls, sheet1)
-except:
+except FileNotFoundError:
     print('По указанному пути файл не обнаружен')
 df_orders = df_orders[5:]
 df_orders.fillna(0, inplace=True)
 
-# Записываем данные по заказу 
+# Записываем данные по заказу
 orders_data = defaultdict(list)
 for index, row in df_orders.iterrows():
     key = row['Заказ (исходный)']
@@ -62,25 +60,34 @@ for i in orders_data.keys():
     extractor.get_article(article)
 
 # Заполняем колонку с изделием
+
+
 def lambdafunc(row):
     if row:
         return row[0][1]
     return 0
 
+
 df_all_categories['Изделие'] = df_all_categories.apply(lambda row: lambdafunc(orders_data.get(row['Заказ на производство'])), axis=True)
 
 # Извлекаем артикул из наименования изделия
+
+
 def insert_article(row):
     article = extractor.get_article(str(row['Изделие']))
     return article
 
+
 df_all_categories.insert(0, 'Артикул изделия', df_all_categories.apply(insert_article, axis=True))
 
 # Заполняем колонку "Заказано" количеством из заказа на производство
+
+
 def lambdafunc(row):
     if row:
         return row[0][0]
     return 0
+
 
 df_all_categories.insert(7, 'Заказано', df_all_categories.apply(lambda row: lambdafunc(orders_data.get(row['Заказ на производство'])), axis=True))
 

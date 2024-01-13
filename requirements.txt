@@ -19,3 +19,4 @@ pytrends
 pyxlsb
 python-dotenv
 PyQt6
+isort

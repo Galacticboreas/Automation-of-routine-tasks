@@ -1,6 +1,8 @@
-from sqlalchemy import Integer, String, Column, DateTime, ForeignKey
-from sqlalchemy.orm import DeclarativeBase, relationship
+from dataclasses import dataclass
 from datetime import datetime
+
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
+from sqlalchemy.orm import DeclarativeBase, relationship
 
 
 class Base(DeclarativeBase):
@@ -19,7 +21,9 @@ class Order(Base):
     released = Column(Integer(), default=0)
     remains_to_release = Column(Integer(), default=0)
     created_on = Column(DateTime(), default=datetime.now)
-    updated_on = Column(DateTime(), default=datetime.now, onupdate=datetime.now)
+    updated_on = Column(DateTime(),
+                        default=datetime.now,
+                        onupdate=datetime.now)
     releaseofassemblykits = relationship("ReleaseOfAssemblyKits",
                                          uselist=False,
                                          back_populates="order",
@@ -67,3 +71,13 @@ class DescriptionAdditionalOrder(Base):
     comment = Column(String())
     order_id = Column(Integer(), ForeignKey("orders.id"))
     order = relationship("Order", back_populates="descriptions")
+
+
+@dataclass
+class OrderData:
+    furniture_article: str
+    furniture_name: str
+    material_code: str
+    material_article: str
+    material_name: str
+    consumption_per_1_product: float

@@ -1,19 +1,14 @@
 import os
-import openpyxl
+from collections import defaultdict
+from pathlib import Path
+
 import pandas as pd
-
-
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
-from collections import defaultdict
-from json import loads, dumps
-from dotenv import load_dotenv
-from pathlib import Path
-from datetime import datetime
 
-from app import Base, Order, ReleaseOfAssemblyKits, \
-                DescriptionMainOrder, DescriptionAdditionalOrder
-
+from app import (Base, DescriptionAdditionalOrder, DescriptionMainOrder, Order,
+                 ReleaseOfAssemblyKits)
 
 load_dotenv()
 env_path = Path('.')/'.env'
@@ -35,7 +30,7 @@ try:
         df_orders = pd.read_excel(xls, sheet1)
         df_kits = pd.read_excel(xls, sheet2)
         df_devision = pd.read_excel(xls, sheet4)
-except:
+except FileNotFoundError:
     print('По указанному пути файл не обнаружен')
 
 # Сортируем по ключевому слову
@@ -132,7 +127,7 @@ for _ in range(len(orders_json)):
     order = Order()
     releaseassemblykits = ReleaseOfAssemblyKits()
     descr_main_oreder = DescriptionMainOrder()
-    
+
     # Заполняем таблицу с основным заказом
     order.composite_key = key
     order.order_date = orders_json[_]['Дата заказа']
@@ -156,7 +151,7 @@ for _ in range(len(orders_json)):
         releaseassemblykits.paint_shop_for_assembly = 0
         releaseassemblykits.assembly_shop = 0
         releaseassemblykits.order = order
-    
+
     # Заполняем таблицу с подразделением и комментарием по заказу
     if df_div_main.get(key):
         descr_main_oreder.division = df_div_main[key][0]
