@@ -11,21 +11,21 @@ config.read('settings.ini', encoding='utf8')
 
 exl_file_dir = config['DEFAULT']['Path_dir']
 exl_data_dir = config['DEFAULT']['Path_data']
-File_name_orders1 = config['DEFAULT']['File_name_orders1']
-File_name_orders2 = config['DEFAULT']['File_name_orders2']
-File_name_source_db_1 = config['DEFAULT']['File_name_source_db_1']
-File_name_source_db_2 = config['DEFAULT']['File_name_source_db_2']
+file_name_orders1 = config['DEFAULT']['File_name_orders1']
+file_name_orders2 = config['DEFAULT']['File_name_orders2']
+file_name_source_db_1 = config['DEFAULT']['File_name_source_db_1']
+file_name_source_db_2 = config['DEFAULT']['File_name_source_db_2']
 sheet_main = config['DEFAULT']['Sheet_main']
-Forecast = config['Sheet.name']['Forecast']
-Not_deploy = config['Sheet.name']['Not_deploy']
-Deploy = config['Sheet.name']['Deploy']
-Sheet_all_categories = config['Sheet.name']['Sheet_all_categories']
-Sheet_sheet_material = config['Sheet.name']['Sheet_sheet_material']
+forecast = config['Sheet.name']['Forecast']
+not_deploy = config['Sheet.name']['Not_deploy']
+deploy = config['Sheet.name']['Deploy']
+sheet_all_categories = config['Sheet.name']['Sheet_all_categories']
+sheet_sheet_material = config['Sheet.name']['Sheet_sheet_material']
 
 # Пути до файлов с заказами
 orders_files = [
-    File_name_orders1,
-    File_name_orders2,
+    file_name_orders1,
+    file_name_orders2,
 ]
 
 # Данные по заказам на производство
@@ -68,13 +68,13 @@ for _ in range(len(orders_files)):
 
 # Названия листов с данными по материалам из выгрузки
 sheets = [
-    Sheet_all_categories + " " + Forecast,
-    Sheet_sheet_material + " " + Forecast,
+    sheet_all_categories + " " + forecast,
+    sheet_sheet_material + " " + forecast,
 ]
 
 material_files = [
-    File_name_source_db_1,
-    File_name_source_db_2,
+    file_name_source_db_1,
+    file_name_source_db_2,
 ]
 
 materials = []   # Собираем данные по расходу материала на 1 изделие
@@ -119,10 +119,10 @@ for _ in range(len(material_files)):
 
 # Названия листов с данными по материалам из выгрузки
 sheets = [
-    Sheet_all_categories + " " + Not_deploy,
-    Sheet_all_categories + " " + Deploy,
-    Sheet_sheet_material + " " + Not_deploy,
-    Sheet_sheet_material + " " + Deploy,
+    sheet_all_categories + " " + not_deploy,
+    sheet_all_categories + " " + deploy,
+    sheet_sheet_material + " " + not_deploy,
+    sheet_sheet_material + " " + deploy,
 ]
 
 for _ in range(len(material_files)):
