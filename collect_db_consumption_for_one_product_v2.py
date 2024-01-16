@@ -1,24 +1,32 @@
 import configparser
-from collections import defaultdict
+from datetime import datetime
 
 from openpyxl import Workbook, load_workbook
 
-from app import ArticleExtractor, OrderData
+from app import ArticleExtractor
 
 config = configparser.ConfigParser()
 
 config.read('settings.ini', encoding='utf8')
 
-exl_file_dir = config['DEFAULT']['Path_dir']
-exl_data_dir = config['DEFAULT']['Path_data']
-file_name_orders1 = config['DEFAULT']['File_name_orders1']
-file_name_orders2 = config['DEFAULT']['File_name_orders2']
-file_name_source_db_1 = config['DEFAULT']['File_name_source_db_1']
-file_name_source_db_2 = config['DEFAULT']['File_name_source_db_2']
-sheet_main = config['DEFAULT']['Sheet_main']
+exl_file_dir = config['PATH.DIR']['Path_dir']
+exl_data_dir = config['PATH.DIR']['Path_data']
+
+file_name_orders1 = config['File.name']['File_name_orders1']
+file_name_orders2 = config['File.name']['File_name_orders2']
+
+file_name_source_db_1 = config['File.name']['File_name_source_db_1']
+file_name_source_db_2 = config['File.name']['File_name_source_db_2']
+
+sales_forecast = config['File.name']['Sales_forecast']
+
+macros = config['File.extension']['macros']
+not_macros = config['File.extension']['not_macros']
+
+deploy = config['Sheet.name']['Deploy']
 forecast = config['Sheet.name']['Forecast']
 not_deploy = config['Sheet.name']['Not_deploy']
-deploy = config['Sheet.name']['Deploy']
+sheet_main = config['Sheet.name']['Sheet_main']
 sheet_all_categories = config['Sheet.name']['Sheet_all_categories']
 sheet_sheet_material = config['Sheet.name']['Sheet_sheet_material']
 
@@ -33,8 +41,27 @@ order_data = dict()
 
 extractor = ArticleExtractor()
 
+exl_file = exl_file_dir + exl_data_dir + sales_forecast + not_macros
+
+furniture_status = dict()
+
+workbook = load_workbook(
+    filename=exl_file,
+    read_only=True,
+    data_only=True
+)
+sheet = workbook['Прогноз 2024']
+
+for value in sheet.iter_rows(min_row=6, max_col=3, values_only=True):
+    furniture_name = value[1]
+    status = value[2]
+    if status:
+        article = extractor.get_article(furniture_name)
+        if not furniture_status.get(article):
+            furniture_status[article] = status
+
 for _ in range(len(orders_files)):
-    exl_file = exl_file_dir + exl_data_dir + orders_files[_]
+    exl_file = exl_file_dir + exl_data_dir + orders_files[_] + macros
     workbook = load_workbook(
         filename=exl_file,
         read_only=True,
@@ -50,11 +77,16 @@ for _ in range(len(orders_files)):
         name = value[4]      # Наименование изделия мебели
         ordered = value[5]   # Количество изделий в заказе
         article = extractor.get_article(name)   # Артикул изделия мебели
+        if furniture_status.get(article):
+            furn_status = furniture_status[article]
+        else:
+            furn_status = 'не определен'
 
         if not order_data.get(key):
             order_data[key] = {
                 'furniture_name': name,
                 'furniture_article': article,
+                'furniture_status': furn_status,
                 'ordered': ordered,
             }
 
@@ -70,9 +102,11 @@ material_files = [
 ]
 
 article_data = dict()
+material_status = dict()
+working_status = ['Рабочий 2024', 'Под заказ', 'Новинка 2024', 'не определен']
 
 for _ in range(len(material_files)):
-    exl_file = exl_file_dir + exl_data_dir + material_files[_]
+    exl_file = exl_file_dir + exl_data_dir + material_files[_] + not_macros
     workbook = load_workbook(
         filename=exl_file,
         read_only=True,
@@ -93,6 +127,18 @@ for _ in range(len(material_files)):
             if order_data.get(key):
                 furniture_name = order_data[key]['furniture_name']
                 furniture_article = order_data[key]['furniture_article']
+                furn_status = order_data[key]['furniture_status']
+                if material_status.get(material_code):
+                    if furn_status in working_status:
+                        mat_status = 'не уникальный'
+                        material_status[material_code] = mat_status
+                else:
+                    if furn_status in working_status:
+                        mat_status = 'не уникальный'
+                        material_status[material_code] = mat_status
+                    else:
+                        mat_status = 'уникальный'
+                        material_status[material_code] = mat_status
                 cons_temp = order_data[key]['ordered']
                 consumption_per_order = cons_temp if cons_temp else 0
                 try:
@@ -100,21 +146,22 @@ for _ in range(len(material_files)):
                 except ZeroDivisionError:
                     consumption_per_1_product = 0
                 if not article_data.get(furniture_article):
-                        material = {
-                            'furniture_name': furniture_name,
-                            material_code: {
-                                'material_article': material_article,
-                                'material_name': material_name,
-                                'consumption_per_1_product': consumption_per_1_product,
-                            }
-                        }
-                        article_data[furniture_article] = material
-                if article_data.get(furniture_article) and not article_data[furniture_article].get(material_code):
-                    article_data[furniture_article][material_code] = {
+                    material = {
+                        'furniture_name': furniture_name,
+                        'furniture_status': furn_status,
+                        material_code: {
                             'material_article': material_article,
                             'material_name': material_name,
                             'consumption_per_1_product': consumption_per_1_product,
+                            }
                         }
+                    article_data[furniture_article] = material
+                if article_data.get(furniture_article) and not article_data[furniture_article].get(material_code):
+                    article_data[furniture_article][material_code] = {
+                        'material_article': material_article,
+                        'material_name': material_name,
+                        'consumption_per_1_product': consumption_per_1_product,
+                    }
 
 # Названия листов с данными по материалам из выгрузки
 sheets = [
@@ -125,7 +172,7 @@ sheets = [
 ]
 
 for _ in range(len(material_files)):
-    exl_file = exl_file_dir + exl_data_dir + material_files[_]
+    exl_file = exl_file_dir + exl_data_dir + material_files[_] + not_macros
     workbook = load_workbook(
         filename=exl_file,
         read_only=True,
@@ -145,6 +192,18 @@ for _ in range(len(material_files)):
             if order_data.get(key):
                 furniture_name = order_data[key]['furniture_name']
                 furniture_article = order_data[key]['furniture_article']
+                furn_status = order_data[key]['furniture_status']
+                if material_status.get(material_code):
+                    if furn_status in working_status:
+                        mat_status = 'не уникальный'
+                        material_status[material_code] = mat_status
+                else:
+                    if furn_status in working_status:
+                        mat_status = 'не уникальный'
+                        material_status[material_code] = mat_status
+                    else:
+                        mat_status = 'уникальный'
+                        material_status[material_code] = mat_status
                 cons_temp = order_data[key]['ordered']
                 consumption_per_order = cons_temp if cons_temp else 0
                 try:
@@ -152,15 +211,16 @@ for _ in range(len(material_files)):
                 except ZeroDivisionError:
                     consumption_per_1_product = 0
                 if not article_data.get(furniture_article):
-                        material = {
-                            'furniture_name': furniture_name,
-                            material_code: {
-                                'material_article': material_article,
-                                'material_name': material_name,
-                                'consumption_per_1_product': consumption_per_1_product,
+                    material = {
+                        'furniture_name': furniture_name,
+                        'furniture_status': furn_status,
+                        material_code: {
+                            'material_article': material_article,
+                            'material_name': material_name,
+                            'consumption_per_1_product': consumption_per_1_product,
                             }
                         }
-                        article_data[furniture_article] = material
+                    article_data[furniture_article] = material
                 if article_data.get(furniture_article) and not article_data[furniture_article].get(material_code):
                     article_data[furniture_article][material_code] = {
                             'material_article': material_article,
@@ -170,6 +230,8 @@ for _ in range(len(material_files)):
 
 # Файл с результатами расчетов расхода на одно изделие
 workbook = Workbook()
+dt_obj = datetime.now()
+dt_str = dt_obj.strftime("%d.%m.%Y %Hч%Mм")
 
 sheet = workbook.active
 sheet.title = 'Расход на 1 изделие'
@@ -177,23 +239,28 @@ sheet.title = 'Расход на 1 изделие'
 sheet.append([
     "Артикул",
     "Наименование",
+    "Статус",
     "Код материала",
     "Артикул материала",
     "Наименование материала",
+    "Уникальность материала",
     "Расход на 1 изделие",
     ])
 
 for article in article_data:
     for mat_cod in article_data[article]:
         if mat_cod != 'furniture_name':
-            data = [
-                article,
-                article_data[article]['furniture_name'],
-                mat_cod,
-                article_data[article][mat_cod]['material_article'],
-                article_data[article][mat_cod]['material_name'],
-                article_data[article][mat_cod]['consumption_per_1_product'],
-            ]
-            sheet.append(data)
+            if mat_cod != 'furniture_status':
+                data = [
+                    article,
+                    article_data[article]['furniture_name'],
+                    article_data[article]['furniture_status'],
+                    mat_cod,
+                    article_data[article][mat_cod]['material_article'],
+                    article_data[article][mat_cod]['material_name'],
+                    material_status[mat_cod],
+                    article_data[article][mat_cod]['consumption_per_1_product'],
+                ]
+                sheet.append(data)
 
-workbook.save(filename=exl_file_dir + exl_data_dir + 'Расход на 1 изделие.xlsx')
+workbook.save(filename=exl_file_dir + exl_data_dir + 'Расход на 1 изделие от ' + dt_str + '.xlsx')
