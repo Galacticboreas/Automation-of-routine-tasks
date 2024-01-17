@@ -30,7 +30,7 @@ sheet_main = config['Sheet.name']['Sheet_main']
 sheet_all_categories = config['Sheet.name']['Sheet_all_categories']
 sheet_sheet_material = config['Sheet.name']['Sheet_sheet_material']
 
-# Пути до файлов с заказами
+# Названия файлов с заказами
 orders_files = [
     file_name_orders1,
     file_name_orders2,
@@ -39,10 +39,13 @@ orders_files = [
 # Данные по заказам на производство
 order_data = dict()
 
+# Извлечь шестизначный артикул из наименования мебели
 extractor = ArticleExtractor()
 
+# Путь до файла с прогнозом продаж на год
 exl_file = exl_file_dir + exl_data_dir + sales_forecast + not_macros
 
+# Данные о статусе мебели
 furniture_status = dict()
 
 workbook = load_workbook(
@@ -52,6 +55,7 @@ workbook = load_workbook(
 )
 sheet = workbook['Прогноз 2024']
 
+# Собрать статусы мебели из прогноза
 for value in sheet.iter_rows(min_row=6, max_col=3, values_only=True):
     furniture_name = value[1]
     status = value[2]
@@ -60,6 +64,7 @@ for value in sheet.iter_rows(min_row=6, max_col=3, values_only=True):
         if not furniture_status.get(article):
             furniture_status[article] = status
 
+# Собрать данные о количестве мебели в заказе
 for _ in range(len(orders_files)):
     exl_file = exl_file_dir + exl_data_dir + orders_files[_] + macros
     workbook = load_workbook(
@@ -96,15 +101,17 @@ sheets = [
     sheet_sheet_material + " " + forecast,
 ]
 
+# Файлы из выгрузки складской программы с разбивкой на материалы
 material_files = [
     file_name_source_db_1,
     file_name_source_db_2,
 ]
 
-article_data = dict()
-material_status = dict()
+article_data = dict()      # Собрать данные по расходу материала на 1 изделие  
+material_status = dict()   # Собрать данные о ствтусе для материалов
 working_status = ['Рабочий 2024', 'Под заказ', 'Новинка 2024', 'не определен']
 
+# Собираем данные о расходе материалов на 1 изделие из листа Прогноз
 for _ in range(len(material_files)):
     exl_file = exl_file_dir + exl_data_dir + material_files[_] + not_macros
     workbook = load_workbook(
@@ -121,7 +128,7 @@ for _ in range(len(material_files)):
             material_code.replace(" ", "")
             material_article = value[4]   # Артикул материала
             material_name = value[5]      # Наименованме материала
-            # # Количество материала в заказе
+            # Количество материала в заказе
             material_amount = value[7] if value[7] else 0
 
             if order_data.get(key):
@@ -139,12 +146,14 @@ for _ in range(len(material_files)):
                     else:
                         mat_status = 'уникальный'
                         material_status[material_code] = mat_status
+                # Расход материала из разбивки складской программы
                 cons_temp = order_data[key]['ordered']
                 consumption_per_order = cons_temp if cons_temp else 0
                 try:
                     consumption_per_1_product = material_amount / consumption_per_order
                 except ZeroDivisionError:
                     consumption_per_1_product = 0
+                # Добавить данные по артикулу и материалу
                 if not article_data.get(furniture_article):
                     material = {
                         'furniture_name': furniture_name,
@@ -156,6 +165,7 @@ for _ in range(len(material_files)):
                             }
                         }
                     article_data[furniture_article] = material
+                # Если артикул есть в базе, добавить материал
                 if article_data.get(furniture_article) and not article_data[furniture_article].get(material_code):
                     article_data[furniture_article][material_code] = {
                         'material_article': material_article,
@@ -163,6 +173,7 @@ for _ in range(len(material_files)):
                         'consumption_per_1_product': consumption_per_1_product,
                     }
 
+# Сбор данных из оставшихся категорий
 # Названия листов с данными по материалам из выгрузки
 sheets = [
     sheet_all_categories + " " + not_deploy,
@@ -171,6 +182,8 @@ sheets = [
     sheet_sheet_material + " " + deploy,
 ]
 
+# Собираем данные о расходе материалов на 1 изделие из оставшихся листов
+# для дополнения отсутствующей информации в прогнозе
 for _ in range(len(material_files)):
     exl_file = exl_file_dir + exl_data_dir + material_files[_] + not_macros
     workbook = load_workbook(
@@ -230,12 +243,16 @@ for _ in range(len(material_files)):
 
 # Файл с результатами расчетов расхода на одно изделие
 workbook = Workbook()
+
+# Дата формирования отчета
 dt_obj = datetime.now()
 dt_str = dt_obj.strftime("%d.%m.%Y %Hч%Mм")
 
+# Создаем лист отчета
 sheet = workbook.active
 sheet.title = 'Расход на 1 изделие'
 
+# Названия колонок отчета
 sheet.append([
     "Артикул",
     "Наименование",
@@ -247,6 +264,7 @@ sheet.append([
     "Расход на 1 изделие",
     ])
 
+# запись данных в файл отчета
 for article in article_data:
     for mat_cod in article_data[article]:
         if mat_cod != 'furniture_name':
@@ -263,4 +281,5 @@ for article in article_data:
                 ]
                 sheet.append(data)
 
-workbook.save(filename=exl_file_dir + exl_data_dir + 'Расход на 1 изделие от ' + dt_str + '.xlsx')
+# Сохраняем данные в файл Excel
+workbook.save(filename=exl_file_dir + exl_data_dir + sheet.title + ' от ' + dt_str + not_macros)
