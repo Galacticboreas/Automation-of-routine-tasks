@@ -1,69 +1,46 @@
-from PyQt6.QtGui import QAction, QIcon
-from PyQt6.QtWidgets import (QMainWindow, QMessageBox, QPushButton,
-                             QVBoxLayout, QWidget)
-
-from app.gui.anotherwindow import AnotherWindow
-
+from PyQt6 import QtCore, QtWidgets
+from PyQt6.QtWidgets import QMainWindow, QWidget, QPushButton
+from PyQt6.QtCore import QSize
+from PyQt6.QtGui import QIcon, QAction
 
 class MainWindow(QMainWindow):
-
+    
     def __init__(self):
-        super().__init__()
-        self.window1 = AnotherWindow()
-        self.window2 = AnotherWindow()
+        QMainWindow.__init__(self)
 
-        layout = QVBoxLayout()
-        button1 = QPushButton("Push for Window 1")
-        button1.clicked.connect(
-            lambda checked: self.toggle_window(self.window1)
-        )
-        layout.addWidget(button1)
+        self.setMinimumSize(QSize(300, 100))
+        self.setWindowTitle("Автоматизация рутинных задач")
 
-        button2 = QPushButton("Push for Window 2")
-        button2.clicked.connect(
-            lambda checked: self.toggle_window(self.window2)
-        )
-        layout.addWidget(button2)
+        # Create new action
+        newAction = QAction(QIcon('new.png'), '&New', self)        
+        newAction.setShortcut('Ctrl+N')
+        newAction.setStatusTip('New document')
+        newAction.triggered.connect(self.newCall)
 
-        button_file_open = QAction(
-            QIcon("resource/icons/android.png"),
-            "&Открыть исходный файл",
-            self,
-        )
-        button_file_open.triggered.connect(self.open_source_file)
+        # Create new action
+        openAction = QAction(QIcon('open.png'), '&Open', self)        
+        openAction.setShortcut('Ctrl+O')
+        openAction.setStatusTip('Open document')
+        openAction.triggered.connect(self.openCall)
 
-        button_collect_db_consumption_per_one_product = QAction(
-            "&Собрать БД расход на одно изделие",
-            self,
-        )
-        button_collect_db_consumption_per_one_product.triggered.connect(
-            self.collect_db_consumption_per_one_product
-        )
+        # Create exit action
+        exitAction = QAction(QIcon('exit.png'), '&Exit', self)        
+        exitAction.setShortcut('Ctrl+Q')
+        exitAction.setStatusTip('Exit application')
+        exitAction.triggered.connect(self.exitCall)
 
-        menu = self.menuBar()
+        # Create menu bar and add action
+        menuBar = self.menuBar()
+        fileMenu = menuBar.addMenu('&File')
+        fileMenu.addAction(newAction)
+        fileMenu.addAction(openAction)
+        fileMenu.addAction(exitAction)
 
-        file_menu = menu.addMenu("&File")
-        file_menu.addAction(button_file_open)
-        file_menu.addAction(button_collect_db_consumption_per_one_product)
+    def openCall(self):
+        print('Open')
 
-        w = QWidget()
-        w.setLayout(layout)
-        self.setCentralWidget(w)
+    def newCall(self):
+        print('New')
 
-    def toggle_window(self, window):
-        if window.isVisible():
-            window.hide()
-        else:
-            window.show()
-
-    def open_source_file(self, event):
-        dlg = QMessageBox(self)
-        dlg.setWindowTitle("Вызвать меню открытия файла с исходными данными")
-        dlg.setText("Открываем файл с исходными данными")
-        self.button_file_open = dlg.exec()
-
-    def collect_db_consumption_per_one_product(self, event):
-        dlg = QMessageBox(self)
-        dlg.setWindowTitle("Собрать БД материалы расх. на 1 изд.")
-        dlg.setText("Открываем файл с выгрузкой данных")
-        self.button_collect_db_consumption_per_one_product = dlg.exec()
+    def exitCall(self):
+        print('Exit app')
