@@ -3,7 +3,7 @@ from datetime import datetime
 
 from openpyxl import Workbook, load_workbook
 
-from app import ArticleExtractor
+from app import ArticleExtractor, MaterialColumn, OrderColumn
 
 config = configparser.ConfigParser()
 
@@ -78,9 +78,9 @@ for _ in range(len(orders_files)):
     for value in sheet.iter_rows(min_row=7,
                                  max_col=7,
                                  values_only=True):
-        key = value[3]       # Полный номер заказа на производство
-        name = value[4]      # Наименование изделия мебели
-        ordered = value[5]   # Количество изделий в заказе
+        key = value[OrderColumn.FULL_ORDER_NUMBER.value]
+        name = value[OrderColumn.FURNITURE_NAME.value]
+        ordered = value[OrderColumn.ORDERED.value]
         article = extractor.get_article(name)   # Артикул изделия мебели
         if furniture_status.get(article):
             furn_status = furniture_status[article]
@@ -107,7 +107,7 @@ material_files = [
     file_name_source_db_2,
 ]
 
-article_data = dict()      # Собрать данные по расходу материала на 1 изделие  
+article_data = dict()      # Собрать данные по расходу материала на 1 изделие
 material_status = dict()   # Собрать данные о ствтусе для материалов
 working_status = ['Рабочий 2024', 'Под заказ', 'Новинка 2024', 'не определен']
 
@@ -123,13 +123,12 @@ for _ in range(len(material_files)):
         sheet = workbook[sheets[i]]
 
         for value in sheet.iter_rows(min_row=2, values_only=True):
-            key = value[1]                # Полный номер заказа на производство
-            material_code = value[3]      # Код материала
+            key = value[MaterialColumn.FULL_ORDER_NUMBER.value]
+            material_code = value[MaterialColumn.MATERIAL_CODE.value]
             material_code.replace(" ", "")
-            material_article = value[4]   # Артикул материала
-            material_name = value[5]      # Наименованме материала
-            # Количество материала в заказе
-            material_amount = value[7] if value[7] else 0
+            material_article = value[MaterialColumn.MATERIAL_ARTICLE.value]
+            material_name = value[MaterialColumn.MATERIAL_NAME.value]
+            material_amount = value[MaterialColumn.MATERIAL_AMOUNT.value] if value[MaterialColumn.MATERIAL_AMOUNT.value] else 0
 
             if order_data.get(key):
                 furniture_name = order_data[key]['furniture_name']
@@ -195,12 +194,12 @@ for _ in range(len(material_files)):
         sheet = workbook[sheets[i]]
 
         for value in sheet.iter_rows(min_row=2, values_only=True):
-            key = value[1]                # Полный номер заказа на производство
-            material_code = value[3]      # Код материала
-            material_article = value[4]   # Артикул материала
-            material_name = value[5]      # Наименованме материала
-            # # Количество материала в заказе
-            material_amount = value[7] if value[7] else 0
+            key = value[MaterialColumn.FULL_ORDER_NUMBER.value]
+            material_code = value[MaterialColumn.MATERIAL_CODE.value]
+            material_code.replace(" ", "")
+            material_article = value[MaterialColumn.MATERIAL_ARTICLE.value]
+            material_name = value[MaterialColumn.MATERIAL_NAME.value]
+            material_amount = value[MaterialColumn.MATERIAL_AMOUNT.value] if value[MaterialColumn.MATERIAL_AMOUNT.value] else 0
 
             if order_data.get(key):
                 furniture_name = order_data[key]['furniture_name']

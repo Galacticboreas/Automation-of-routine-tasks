@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import DeclarativeBase, relationship
@@ -81,3 +82,17 @@ class OrderData:
     material_article: str
     material_name: str
     consumption_per_1_product: float
+
+
+class OrderColumn(Enum):
+    FULL_ORDER_NUMBER = 3
+    FURNITURE_NAME = 4
+    ORDERED = 5
+
+
+class MaterialColumn(Enum):
+    FULL_ORDER_NUMBER = 1
+    MATERIAL_CODE = 3
+    MATERIAL_ARTICLE = 4
+    MATERIAL_NAME = 5
+    MATERIAL_AMOUNT = 7
