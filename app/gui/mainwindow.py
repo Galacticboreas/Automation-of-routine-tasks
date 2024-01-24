@@ -11,20 +11,28 @@ class MainWindow(QMainWindow):
         self.setMinimumSize(QSize(300, 100))
         self.setWindowTitle("Автоматизация рутинных задач")
 
+        # Add button widget
+        pybutton = QPushButton('Отчет: заказы на', self)
+        pybutton.setShortcut('Ctrl+H')
+        pybutton.clicked.connect(self.clickMethod)
+        pybutton.resize(300,30)
+        pybutton.move(0, 20)        
+        pybutton.setToolTip('This is a tooltip message.')
+
         # Create new action
-        newAction = QAction(QIcon('new.png'), '&New', self)        
+        newAction = QAction('&New', self)        
         newAction.setShortcut('Ctrl+N')
         newAction.setStatusTip('New document')
         newAction.triggered.connect(self.newCall)
 
         # Create new action
-        openAction = QAction(QIcon('open.png'), '&Open', self)        
+        openAction = QAction('&Open', self)        
         openAction.setShortcut('Ctrl+O')
         openAction.setStatusTip('Open document')
         openAction.triggered.connect(self.openCall)
 
         # Create exit action
-        exitAction = QAction(QIcon('exit.png'), '&Exit', self)        
+        exitAction = QAction('&Exit', self)        
         exitAction.setShortcut('Ctrl+Q')
         exitAction.setStatusTip('Exit application')
         exitAction.triggered.connect(self.exitCall)
@@ -35,6 +43,9 @@ class MainWindow(QMainWindow):
         fileMenu.addAction(newAction)
         fileMenu.addAction(openAction)
         fileMenu.addAction(exitAction)
+
+    def clickMethod(self):
+        print('Создать отчет "Заказы на производство"')
 
     def openCall(self):
         print('Open')

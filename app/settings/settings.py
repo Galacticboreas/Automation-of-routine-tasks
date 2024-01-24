@@ -1,34 +1,20 @@
-from dataclasses import dataclass
 import configparser
-
-config = configparser.ConfigParser()
+from dataclasses import dataclass, field
 
 @dataclass
 class ReportSettingsOrders:
-     exl_file: str = ""
+     config = configparser.ConfigParser()
+     config.read('settings.ini', encoding='utf8')
 
-     path_dir: str = ""
-     path_data: str = ""
-     source_file_name: str = ""
-     macros: str = ""
-     not_macros: str = ""
-     sheet_main: str = ""
+     path_dir: str = config['PATH.DIR']['Path_dir']
+     path_data: str = config["PATH.DIR"]['Path_data']
+     source_file_name: str = config["File.name"]['File_name_source']
+     report_file_name: str = config['File.name']['File_name_report']
+     macros: str = config['File.extension']['macros']
+     not_macros: str = config['File.extension']['not_macros']
+     source_file: str = field(init=False)
+     report_file: str = field(init=False)
 
-     def __init__(self):
-          config = configparser.ConfigParser()
-          config.read('settings.ini', encoding='utf8')
-          self.path_dir = config['PATH.DIR']['Path_dir']
-          self.path_data = config["PATH.DIR"]['Path_data']
-          self.source_file_name = config["File.name"]['File_name_source']
-          self.macros = config['File.extension']['macros']
-          self.not_macros = config['File.extension']['not_macros']
-
-
-     def __post_init(self):
-          self.exl_file = self.path_dir + self.path_data + self.source_file_name + self.macros
-
-ord_settings = ReportSettingsOrders()
-
-print("-------------------")
-print(ord_settings.exl_file)
-print("-------------------")
+     def __post_init__(self):
+          self.source_file = self.path_dir + self.path_data + self.source_file_name + self.not_macros
+          self.report_file = self.path_dir + self.path_data + self.report_file_name + self.macros
