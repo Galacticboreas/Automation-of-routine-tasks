@@ -17,6 +17,8 @@ class ReportSettingsOrders:
     sheet_monitor_1C: str = config['Sheet.name']['Sheet_monitor_1C']
     macros: str = config['File.extension']['macros']
     not_macros: str = config['File.extension']['not_macros']
+    expression: str = config['Expressions']['Production_order']
+
     source_file: str = field(init=False)
     report_file: str = field(init=False)
 
