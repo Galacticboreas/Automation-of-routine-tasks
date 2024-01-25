@@ -1,15 +1,19 @@
 from pprint import pprint
 
 from openpyxl import load_workbook
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
 
-from app import ArticleExtractor, ReportSettingsOrders
+from app import (ArticleExtractor, Base, DescriptionAdditionalOrderRowData,
+                 DescriptionMainOrderRowData, OrderRowData,
+                 ReleaseOfAssemblyKitsRowData, ReportSettingsOrders,
+                 extract_data_moving_sets_of_furniture)
 
 config = ReportSettingsOrders()
 extractor = ArticleExtractor()
 expression = config.expression
 orders_data = dict()
 error_log = dict()
-
 
 if __name__ == '__main__':
     # Открыть файл с исходными данными
@@ -18,40 +22,32 @@ if __name__ == '__main__':
         read_only=True,
         data_only=True
     )
-    sheet = workbook[config.sheet_moving_1C]
+    orders_data = extract_data_moving_sets_of_furniture(
+        orders_data=orders_data,
+        error_log=error_log,
+        workbook=workbook,
+        sheet=config.sheet_moving_1C,
+        expression=config.expression,
+        extractor=extractor,
+        config=config
+    )
+    
+# Создаем таблицы в БД
+engine = create_engine('sqlite:///data/orders_row_data.db')
+Base.metadata.drop_all(engine)
+Base.metadata.create_all(engine)
+session = Session(bind=engine)
 
-    for value in sheet.iter_rows(min_row=2, values_only=True):
-        full_order_number = value[0]
-        composite_key = full_order_number[43:47] + full_order_number[29:33]
-        furniture_name = value[1]
-        furniture_article = extractor.get_article(furniture_name)
-        ordered = value[2]
-        released = value[3]
-        remains_to_release = value[4]
-        if (expression in full_order_number) and ordered:
-            orders_data[composite_key] = {
-                'moving_sets_of_furniture': {
-                    'full_order_number': full_order_number,
-                    'furniture_name': furniture_name,
-                    'furniture_article': furniture_article,
-                    'ordered': ordered,
-                    'released': released,
-                    'remains_to_release': remains_to_release,
+for key in orders_data:
+    if not (key == 'ErrorLog'):
+        order = OrderRowData()
+        order.composite_key = key
+        order.full_order_number = orders_data[key]['moving_sets_of_furniture']['full_order_number']
+        order.furniture_name = orders_data[key]['moving_sets_of_furniture']['furniture_name']
+        order.furniture_article = orders_data[key]['moving_sets_of_furniture']['furniture_article']
+        order.ordered = orders_data[key]['moving_sets_of_furniture']['ordered']
+        order.released = orders_data[key]['moving_sets_of_furniture']['released']
+        order.remains_to_release = orders_data[key]['moving_sets_of_furniture']['remains_to_release']
+        session.add(order)
 
-                }
-            }
-        elif (expression in full_order_number) and not ordered:
-            error_log[composite_key] = {
-                'moving_sets_of_furniture': {
-                    'full_order_number': full_order_number,
-                    'furniture_name': furniture_name,
-                    'furniture_article': furniture_article,
-                    'ordered': ordered,
-                    'released': released,
-                    'remains_to_release': remains_to_release,
-                    }
-                }
-    orders_data['ErrorLog'] = error_log
-
-pprint(orders_data['ErrorLog'])
-print(len(orders_data))
+session.commit()
