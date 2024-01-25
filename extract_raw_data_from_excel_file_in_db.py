@@ -1,5 +1,3 @@
-from pprint import pprint
-
 from openpyxl import load_workbook
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -31,7 +29,7 @@ if __name__ == '__main__':
         extractor=extractor,
         config=config
     )
-    
+
 # Создаем таблицы в БД
 engine = create_engine('sqlite:///data/orders_row_data.db')
 Base.metadata.drop_all(engine)
