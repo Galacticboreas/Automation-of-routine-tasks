@@ -15,7 +15,7 @@ def extract_data_moving_sets_of_furniture(orders_data: dict,
         ordered = value[2]
         released = value[3]
         remains_to_release = value[4]
-        if (expression in full_order_number) and ordered != None:
+        if (expression in full_order_number) and (ordered is not None):
             orders_data[composite_key] = {
                 'moving_sets_of_furniture': {
                     'full_order_number': full_order_number,
@@ -27,7 +27,7 @@ def extract_data_moving_sets_of_furniture(orders_data: dict,
 
                 }
             }
-        elif (expression in full_order_number) and (ordered == None):
+        elif (expression in full_order_number) and (ordered is None):
             error_log[composite_key] = {
                 'moving_sets_of_furniture': {
                     'full_order_number': full_order_number,
