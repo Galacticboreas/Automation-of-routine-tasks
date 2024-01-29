@@ -7,7 +7,7 @@ class ArticleExtractor:
     Результат: 194236
 
     Returns:
-        _type_: _description_
+        articles: [6-ти значные цифры арткула мебели]
     """
 
     articles = dict()
@@ -58,10 +58,29 @@ class ArticleExtractor:
         return num_right - num_left
 
     def get_symbol(self, name):
+        """Функция удаляет скобки из правой части строки
+
+        Args:
+            name (str): [строка со кобками]
+
+        Returns:
+            name (str): [строка с удаленными скобками первого вхождения
+            правой части]
+        """
         return name[name.rfind("(") + 1: name.rfind(")")]
 
     def get_num_extract_articles(self):
+        """Подчсет количества извлеченных артикулов в кэше
+
+        Returns:
+            len(articles) (int): [длина словаря с артикулами]
+        """
         return len(self.articles)
 
     def get_num_of_iter(self):
+        """Подстчет количества итераций по строкам отчета
+
+        Returns:
+            num_of_iter (int): [количество итераций]
+        """
         return self.num_of_iter
