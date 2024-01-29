@@ -1,4 +1,14 @@
 class ArticleExtractor:
+    """
+    Клас предназначен для извлечения и хеширования 6-ти значного
+    артикула из полного нименования изделия мебели.
+
+    Пример: Тумба НекоеНазвание 60 белая (194236)
+    Результат: 194236
+
+    Returns:
+        _type_: _description_
+    """
 
     articles = dict()
     num_of_iter = 0
@@ -34,6 +44,15 @@ class ArticleExtractor:
         return name
 
     def get_num_char(self, name):
+        """Функция определяет количество символов
+        между скобками правой части строки.
+
+        Args:
+            name (str): строка со скобками
+
+        Returns:
+            int: количество символов между скобками (..кол-во..)
+        """
         num_right = name.rfind(")")
         num_left = name.rfind("(") + 1
         return num_right - num_left
@@ -46,7 +65,3 @@ class ArticleExtractor:
 
     def get_num_of_iter(self):
         return self.num_of_iter
-
-
-def test_func_articles(a, b):
-    return f'a = {a}, b = {b}'

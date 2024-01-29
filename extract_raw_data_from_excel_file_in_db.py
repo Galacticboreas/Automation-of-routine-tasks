@@ -70,6 +70,7 @@ if __name__ == '__main__':
     Base.metadata.create_all(engine)
     session = Session(bind=engine)
 
+    # Импортируем данные в БД
     for key in orders_data:
         if not (key == 'ErrorLog'):
             order = OrderRowData()
