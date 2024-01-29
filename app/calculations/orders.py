@@ -69,9 +69,7 @@ def extract_data_release_of_assembly_kits(orders_data: dict,
 
 def extract_data_job_monitor_for_work_centers(orders_data: dict,
                                               workbook: object,
-                                              sheet: str,
-                                              pattern: str,
-                                              ) -> dict:
+                                              sheet: str) -> dict:
     workbook_sheet = workbook[sheet]
     child_order_data = dict()
 

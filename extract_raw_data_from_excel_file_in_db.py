@@ -45,18 +45,11 @@ if __name__ == '__main__':
         expression=config.expression
     )
 
-    pattern = r'[0-9]{11}\
-                [" "]["о"]["т"][" "]\
-                [0-9]{2}["."][0-9]{2}["."][0-9]{4}\
-                [" "]\
-                [0-9]{2}[":"][0-9]{2}[":"][0-9]{2}'
-
     # Собираем данные по проценту готовности заказов
     orders_data = extract_data_job_monitor_for_work_centers(
         orders_data=orders_data,
         workbook=workbook,
-        sheet=config.sheet_percentage_1C,
-        pattern=pattern
+        sheet=config.sheet_percentage_1C
     )
 
     pprint(orders_data['202300920'])
