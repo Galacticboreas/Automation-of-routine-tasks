@@ -7,6 +7,21 @@ def extract_data_moving_sets_of_furniture(orders_data: dict,
                                           expression: str,
                                           extractor: object,
                                           config: object) -> dict:
+    """Функция предназначена для сбора данных по перемещению комплектов мебели
+    из файла excel в словарь данных.
+
+    Args:
+        orders_data (dict): [данные по заказах на производство]
+        error_log (dict): [журнал ошибок учета]
+        workbook (object): [файл excel с исходными данными из 1С]
+        sheet (str): [наименование листа]
+        expression (str): [ключевое слово для сортировки строк]
+        extractor (object): [функция извлечения 6-ти значного артикула из наименования]
+        config (object): [класс с настройками]
+
+    Returns:
+        dict: [данные по заказам на производство]
+    """
     sheet = workbook[config.sheet_moving_1C]
 
     for value in sheet.iter_rows(min_row=2, values_only=True):

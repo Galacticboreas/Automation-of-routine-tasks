@@ -1,3 +1,15 @@
+"""
+    Скрипт имитирует работу коннектора программы 1С для экспорта
+    данных в БД.
+    На данном этапе данные из программы 1С, вручную
+    копируются в файл excel на отдельные листы, предназначенные
+    для каждого вида отчета.
+    Скрипт последовательно проходит по листам excel и собирает
+    данные по заказу на производство в словарь.
+    После сбора всей информации с листов, скрипт импортирует
+    данные из словаря в таблицы БД.
+"""
+
 from pprint import pprint
 
 from openpyxl import load_workbook
@@ -13,8 +25,6 @@ from app import (ArticleExtractor, Base, DescriptionAdditionalOrderRowData,
 
 config = ReportSettingsOrders()
 extractor = ArticleExtractor()
-expression = config.expression
-sheet_name = config.sheet_moving_1C
 orders_data = dict()
 error_log = dict()
 
@@ -31,8 +41,8 @@ if __name__ == '__main__':
         orders_data=orders_data,
         error_log=error_log,
         workbook=workbook,
-        sheet=sheet_name,
-        expression=expression,
+        sheet=config.sheet_moving_1C,
+        expression=config.expression,
         extractor=extractor,
         config=config
     )
@@ -53,7 +63,7 @@ if __name__ == '__main__':
     )
 
     pprint(orders_data['202300920'])
-
+    
     # Создаем таблицы в БД
     engine = create_engine('sqlite:///data/orders_row_data.db')
     Base.metadata.drop_all(engine)
