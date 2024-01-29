@@ -62,6 +62,7 @@ if __name__ == '__main__':
     )
 
     pprint(orders_data['202300920'])
+    pprint(error_log)
 
     # Создаем таблицы в БД
     engine = create_engine('sqlite:///data/orders_row_data.db')
