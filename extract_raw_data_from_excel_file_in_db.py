@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app import (ArticleExtractor, Base, DescriptionAdditionalOrderRowData,
                  DescriptionMainOrderRowData, OrderRowData,
-                 ReleaseOfAssemblyKitsRowData, ReportSettingsOrders,
+                 ReleaseOfAssemblyKitsRowData, ReportSettingsOrders, JobMonitorForWorkCenters, ChildOrder,
                  extract_data_job_monitor_for_work_centers,
                  extract_data_moving_sets_of_furniture,
                  extract_data_release_of_assembly_kits)
@@ -84,5 +84,19 @@ if __name__ == '__main__':
                 releaseassemblykits.paint_shop_for_assembly = 0
                 releaseassemblykits.assembly_shop = 0
                 releaseassemblykits.order = order
+            if orders_data[key].get('job monitor for work centers'):
+                monitor = JobMonitorForWorkCenters()
+                monitor.percentage_of_readiness_to_cut = orders_data[key]['job monitor for work centers']['percentage_of_readiness_to_cut']
+                monitor.number_of_details_plan = orders_data[key]['job monitor for work centers']['number_of_details_plan']
+                monitor.number_of_details_fact = orders_data[key]['job monitor for work centers']['number_of_details_fact']
+                monitor.order = order
+            if orders_data[key].get('child_orders'):
+                for key_child in orders_data[key]['child_orders']:
+                    child = ChildOrder()
+                    child.composite_key = key_child
+                    child.percentage_of_readiness_to_cut = orders_data[key]['child_orders'][key_child]['percentage_of_readiness_to_cut']
+                    child.number_of_details_plan = orders_data[key]['child_orders'][key_child]['number_of_details_plan']
+                    child.number_of_details_fact = orders_data[key]['child_orders'][key_child]['number_of_details_fact']
+                    child.order = order
             session.add(order)
     session.commit()
