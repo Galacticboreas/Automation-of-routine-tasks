@@ -20,7 +20,7 @@ def extract_data_moving_sets_of_furniture(orders_data: dict,
         config (object): [класс с настройками]
 
     Returns:
-        dict: [данные по заказам на производство]
+        orders_data (dict): [данные по заказам на производство]
     """
     workbook_sheet = workbook[config.sheet_moving_1C]
 
@@ -41,9 +41,8 @@ def extract_data_moving_sets_of_furniture(orders_data: dict,
                     'ordered': ordered,
                     'released': released,
                     'remains_to_release': remains_to_release,
-
                 }
-            }
+                }
         elif (expression in full_order_number) and (ordered is None):
             error_log[composite_key] = {
                 'error description': {
@@ -91,7 +90,6 @@ def extract_data_job_monitor_for_work_centers(orders_data: dict,
                                               workbook: object,
                                               sheet: str) -> dict:
     workbook_sheet = workbook[sheet]
-    child_order_data = dict()
 
     for value in workbook_sheet.iter_rows(min_row=2):
         pattern = r'[0-9]{11}[" "]["о"]["т"][" "][0-9]{2}["."][0-9]{2}["."][0-9]{4}[" "][0-9]{2}[":"][0-9]{2}[":"][0-9]{2}'
@@ -115,17 +113,19 @@ def extract_data_job_monitor_for_work_centers(orders_data: dict,
                 percentage_of_readiness_to_cut = value[2].value
                 number_of_details_plan = value[3].value
                 number_of_details_fact = value[4].value
-                child_order_data = {
-                    key: {
-                        'percentage_of_readiness_to_cut': percentage_of_readiness_to_cut,
-                        'number_of_details_plan': number_of_details_plan,
-                        'number_of_details_fact': number_of_details_fact,
-                    }
-                }
+
                 if orders_data.get(composite_key) and not orders_data[composite_key].get('child_orders'):
-                    orders_data[composite_key]['child_orders'] = child_order_data
+                    orders_data[composite_key]['child_orders'] = {
+                        'job monitor for work centers': {
+                            key: {
+                                'percentage_of_readiness_to_cut': percentage_of_readiness_to_cut,
+                                'number_of_details_plan': number_of_details_plan,
+                                'number_of_details_fact': number_of_details_fact,
+                                }
+                                }
+                            }
                 if orders_data.get(composite_key) and orders_data[composite_key]['child_orders']:
-                    orders_data[composite_key]['child_orders'][key] = {
+                    orders_data[composite_key]['child_orders']['job monitor for work centers'][key] = {
                             'percentage_of_readiness_to_cut': percentage_of_readiness_to_cut,
                             'number_of_details_plan': number_of_details_plan,
                             'number_of_details_fact': number_of_details_fact,

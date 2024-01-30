@@ -99,9 +99,12 @@ class ChildOrder(Base):
 class DescriptionMainOrderRowData(Base):
     __tablename__ = 'descriptions_main_orders_row_data'
     id = Column(Integer(), primary_key=True)
-    division = Column(String())
-    date_launch = Column(String())
-    date_execution = Column(String())
+    order_date = Column(String())
+    order_number = Column(String())
+    order_company = Column(String())
+    order_division = Column(String())
+    order_launch_date = Column(String())
+    order_execution_date = Column(String())
     responsible = Column(String())
     comment = Column(String())
     order_id = Column(Integer(), ForeignKey("orders_row_data.id"))
@@ -170,13 +173,24 @@ def import_data_to_db_production_orders(orders_data: dict, session: object)-> ob
                 monitor.order = order
 
             # Данные о дополнительных заказах (раскрой на буфер и раскрой на прокраску)
-            if orders_data[key].get('child_orders'):
-                for key_child in orders_data[key]['child_orders']:
+            if orders_data[key].get('child_orders') and orders_data[key]['child_orders'].get('job monitor for work centers'):
+                for key_child in orders_data[key]['child_orders']['job monitor for work centers']:
                     child = ChildOrder()
                     child.composite_key = key_child
-                    child.percentage_of_readiness_to_cut = orders_data[key]['child_orders'][key_child]['percentage_of_readiness_to_cut']
-                    child.number_of_details_plan = orders_data[key]['child_orders'][key_child]['number_of_details_plan']
-                    child.number_of_details_fact = orders_data[key]['child_orders'][key_child]['number_of_details_fact']
+                    child.percentage_of_readiness_to_cut = orders_data[key]['child_orders']['job monitor for work centers'][key_child]['percentage_of_readiness_to_cut']
+                    child.number_of_details_plan = orders_data[key]['child_orders']['job monitor for work centers'][key_child]['number_of_details_plan']
+                    child.number_of_details_fact = orders_data[key]['child_orders']['job monitor for work centers'][key_child]['number_of_details_fact']
                     child.order = order
+            if orders_data[key].get('report description of production orders'):
+                description_main = DescriptionMainOrderRowData()
+                description_main.order_date = orders_data[key]['report description of production orders']['order_date']
+                description_main.order_number = orders_data[key]['report description of production orders']['order_number']
+                description_main.order_company = orders_data[key]['report description of production orders']['order_company']
+                description_main.order_division = orders_data[key]['report description of production orders']['order_division']
+                description_main.order_launch_date = orders_data[key]['report description of production orders']['order_launch_date']
+                description_main.order_execution_date = orders_data[key]['report description of production orders']['order_execution_date']
+                description_main.responsible = orders_data[key]['report description of production orders']['responsible']
+                description_main.comment = orders_data[key]['report description of production orders']['comment']
+                description_main.order = order
             session.add(order)
     return session
