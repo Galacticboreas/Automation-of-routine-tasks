@@ -60,6 +60,9 @@ class OrderRowData(Base):
     child_order = relationship("ChildOrder",
                                back_populates='order',
                                cascade="all, delete")
+    child_order_report_description = relationship("ChildOrderReportDescription",
+                                                  back_populates='order',
+                                                  cascade="all, delete")
 
 
 class ReleaseOfAssemblyKitsRowData(Base):
@@ -76,9 +79,9 @@ class ReleaseOfAssemblyKitsRowData(Base):
 class JobMonitorForWorkCenters(Base):
     __tablename__ = 'job_monitor_for_work_centers'
     id = Column(Integer(), primary_key=True)
-    percentage_of_readiness_to_cut = Column(Float())
-    number_of_details_plan = Column(Integer())
-    number_of_details_fact = Column(Integer())
+    percentage_of_readiness_to_cut = Column(Float(), default=0)
+    number_of_details_plan = Column(Integer(), default=0)
+    number_of_details_fact = Column(Integer(), default=0)
     order_id = Column(Integer(), ForeignKey("orders_row_data.id"))
     order = relationship("OrderRowData",
                          back_populates="monitor_for_work_center")
@@ -88,12 +91,28 @@ class ChildOrder(Base):
     __tablename__ = 'child_orders'
     id = Column(Integer(), primary_key=True)
     composite_key = Column(String(9), nullable=False)
-    percentage_of_readiness_to_cut = Column(Float())
-    number_of_details_plan = Column(Integer())
-    number_of_details_fact = Column(Integer())
+    percentage_of_readiness_to_cut = Column(Float(), default=0)
+    number_of_details_plan = Column(Integer(), default=0)
+    number_of_details_fact = Column(Integer(), default=0)
     order_id = Column(Integer(), ForeignKey("orders_row_data.id"))
     order = relationship("OrderRowData",
                          back_populates="child_order")
+
+
+class ChildOrderReportDescription(Base):
+    __tablename__ = 'child_orders_report_description'
+    id = Column(Integer(), primary_key=True)
+    composite_key = Column(String(9), nullable=False)
+    order_date = Column(String())
+    order_number = Column(String())
+    order_company = Column(String())
+    order_division = Column(String())
+    order_launch_date = Column(String(), default="")
+    order_execution_date = Column(String(), default="")
+    responsible = Column(String())
+    comment = Column(String(), default="")
+    order_id = Column(Integer(), ForeignKey("orders_row_data.id"))
+    order = relationship("OrderRowData", back_populates="child_order_report_description")
 
 
 class DescriptionMainOrderRowData(Base):
@@ -103,10 +122,10 @@ class DescriptionMainOrderRowData(Base):
     order_number = Column(String())
     order_company = Column(String())
     order_division = Column(String())
-    order_launch_date = Column(String())
-    order_execution_date = Column(String())
-    responsible = Column(String())
-    comment = Column(String())
+    order_launch_date = Column(String(), default="")
+    order_execution_date = Column(String(), default="")
+    responsible = Column(String(), default="")
+    comment = Column(String(), default="")
     order_id = Column(Integer(), ForeignKey("orders_row_data.id"))
     order = relationship("OrderRowData", back_populates="description_main_order")
 
@@ -181,6 +200,8 @@ def import_data_to_db_production_orders(orders_data: dict, session: object)-> ob
                     child.number_of_details_plan = orders_data[key]['child_orders']['job monitor for work centers'][key_child]['number_of_details_plan']
                     child.number_of_details_fact = orders_data[key]['child_orders']['job monitor for work centers'][key_child]['number_of_details_fact']
                     child.order = order
+            
+            # Описание заказа из отчета "Заказы на производство"
             if orders_data[key].get('report description of production orders'):
                 description_main = DescriptionMainOrderRowData()
                 description_main.order_date = orders_data[key]['report description of production orders']['order_date']
@@ -192,5 +213,21 @@ def import_data_to_db_production_orders(orders_data: dict, session: object)-> ob
                 description_main.responsible = orders_data[key]['report description of production orders']['responsible']
                 description_main.comment = orders_data[key]['report description of production orders']['comment']
                 description_main.order = order
+            
+            # Описание дополнительных заказов к основному заказу на производство
+            if orders_data[key].get('child_orders') and orders_data[key]['child_orders'].get('report description of production orders'):
+                for key_child_descr in orders_data[key]['child_orders']['report description of production orders']:
+                    child_description = ChildOrderReportDescription()
+                    child_description.composite_key = key_child_descr
+                    child_description.order_date = orders_data[key]['child_orders']['report description of production orders'][key_child_descr]['order_date']
+                    child_description.order_number = orders_data[key]['child_orders']['report description of production orders'][key_child_descr]['order_number']
+                    child_description.order_company = orders_data[key]['child_orders']['report description of production orders'][key_child_descr]['order_company']
+                    child_description.order_division = orders_data[key]['child_orders']['report description of production orders'][key_child_descr]['order_division']
+                    child_description.order_launch_date = orders_data[key]['child_orders']['report description of production orders'][key_child_descr]['order_launch_date']
+                    child_description.order_execution_date = orders_data[key]['child_orders']['report description of production orders'][key_child_descr]['order_execution_date']
+                    child_description.responsible = orders_data[key]['child_orders']['report description of production orders'][key_child_descr]['responsible']
+                    child_description.comment = orders_data[key]['child_orders']['report description of production orders'][key_child_descr]['comment']
+                    child_description.order = order
+
             session.add(order)
     return session

@@ -66,7 +66,18 @@ def extract_data_release_of_assembly_kits(orders_data: dict,
                                           workbook: object,
                                           sheet: str,
                                           expression: str) -> dict:
-    
+    """Функция предназначена для сбора данных из отчета "Перемещение
+    комплектов мебели"
+
+    Args:
+        orders_data (dict): [данные по заказам на производство]
+        workbook (object): [файл excel с исходными данными]
+        sheet (str): [наименование листа]
+        expression (str): [ключевое слово для сортировки строк]
+
+    Returns:
+        orders_data (dict): [данные по заказам на производство]
+    """
     workbook_sheet = workbook[sheet]
 
     for value in workbook_sheet.iter_rows(min_row=2, values_only=True):
@@ -89,6 +100,16 @@ def extract_data_release_of_assembly_kits(orders_data: dict,
 def extract_data_job_monitor_for_work_centers(orders_data: dict,
                                               workbook: object,
                                               sheet: str) -> dict:
+    """Функция предназначена для сбора данных из отчета "Монитор рабочих центров"
+
+    Args:
+        orders_data (dict): [данные по заказам на производство]
+        workbook (object): [файл excel с исходными данными]
+        sheet (str): [наименование листа]
+
+    Returns:
+        orders_data (dict): [данные по заказам на производство]
+    """
     workbook_sheet = workbook[sheet]
 
     for value in workbook_sheet.iter_rows(min_row=2):
@@ -129,5 +150,121 @@ def extract_data_job_monitor_for_work_centers(orders_data: dict,
                             'percentage_of_readiness_to_cut': percentage_of_readiness_to_cut,
                             'number_of_details_plan': number_of_details_plan,
                             'number_of_details_fact': number_of_details_fact,
+                    }
+    return orders_data
+
+def extract_data_production_orders_report(orders_data: dict,
+                                          workbook: object,
+                                          sheet: str) -> dict:
+    """Функция предназначена для сбора данных из отчета "Заказы на производство"
+
+    Args:
+        orders_data (dict): [данные по заказам на производство]
+        workbook (object): [файл excel с исходными данными]
+        sheet (str): [наименование листа]
+
+    Returns:
+        orders_data (dict): [данные по заказам на производство]
+    """
+    child_orders_temp = dict()
+    workbook_sheet = workbook[sheet]
+
+    for value in workbook_sheet.iter_rows(min_row=2, values_only=True):
+        full_order_date = value[0]
+        order_date = full_order_date[6:10]
+        order_number = "{:05d}".format(value[1])
+        composite_key = order_date + order_number
+        order_company = value[2]
+        order_division = value[3]
+        order_launch_date = value[4]
+        order_execution_date = value[5]
+        responsible = value[6]
+        comment = value[7]
+        order_parent = value[8]
+
+        # Если в строке есть основной заказ, то это дополнительный заказ на раскрой и покраску
+        # Собираем информацию о дополнительных заказах
+        if order_parent:
+            composite_key_parent = order_parent[43:47] + order_parent[28:33]
+            if orders_data.get(composite_key_parent) and not orders_data[composite_key_parent].get('child_orders'):
+                child_orders_temp[composite_key] = composite_key_parent
+                orders_data[composite_key_parent]['child_orders'] = {
+                    'report description of production orders': {
+                        composite_key: {
+                            'order_date': order_date,
+                            'order_number': order_number,
+                            'order_company': order_company,
+                            'order_division': order_division,
+                            'order_launch_date': order_launch_date,
+                            'order_execution_date': order_execution_date,
+                            'responsible': responsible,
+                            'comment': comment,
+                            }
+                            }
+                            }
+            if orders_data.get(composite_key_parent) and orders_data[composite_key_parent]['child_orders'].get('report description of production orders'):
+                child_orders_temp[composite_key] = composite_key_parent
+                orders_data[composite_key_parent]['child_orders']['report description of production orders'][composite_key] = {
+                    'order_date': order_date,
+                    'order_number': order_number,
+                    'order_company': order_company,
+                    'order_division': order_division,
+                    'order_launch_date': order_launch_date,
+                    'order_execution_date': order_execution_date,
+                    'responsible': responsible,
+                    'comment': comment,
+                    }
+            if orders_data.get(composite_key_parent) and not orders_data[composite_key_parent]['child_orders'].get('report description of production orders'):
+                child_orders_temp[composite_key] = composite_key_parent
+                orders_data[composite_key_parent]['child_orders']['report description of production orders'] = {
+                    composite_key: {
+                        'order_date': order_date,
+                        'order_number': order_number,
+                        'order_company': order_company,
+                        'order_division': order_division,
+                        'order_launch_date': order_launch_date,
+                        'order_execution_date': order_execution_date,
+                        'responsible': responsible,
+                        'comment': comment,
+                        }
+                }
+            if child_orders_temp.get(composite_key_parent) and orders_data.get(child_orders_temp[composite_key_parent]) and orders_data[child_orders_temp[composite_key_parent]]['child_orders'].get('report description of production orders'):
+                orders_data[child_orders_temp[composite_key_parent]]['child_orders']['report description of production orders'][composite_key] = {
+                    'order_date': order_date,
+                    'order_number': order_number,
+                    'order_company': order_company,
+                    'order_division': order_division,
+                    'order_launch_date': order_launch_date,
+                    'order_execution_date': order_execution_date,
+                    'responsible': responsible,
+                    'comment': comment,
+                    }
+            if child_orders_temp.get(composite_key_parent) and orders_data.get(child_orders_temp[composite_key_parent]) and not orders_data[child_orders_temp[composite_key_parent]]['child_orders'].get('report description of production orders'):
+                child_orders_temp[composite_key] = composite_key_parent
+                orders_data[child_orders_temp[composite_key_parent]]['child_orders']['report description of production orders'] = {
+                    composite_key: {
+                        'order_date': order_date,
+                        'order_number': order_number,
+                        'order_company': order_company,
+                        'order_division': order_division,
+                        'order_launch_date': order_launch_date,
+                        'order_execution_date': order_execution_date,
+                        'responsible': responsible,
+                        'comment': comment,
+                        }
+                }
+        # Если строка пуста, то это основной заказ
+        # Собираем данные по описанию основного заказа на производство
+        else:
+            if orders_data.get(composite_key):
+                orders_data[composite_key]['report description of production orders'] = {
+                        'order_date': order_date,
+                        'order_number': order_number,
+                        'order_company': order_company,
+                        'order_division': order_division,
+                        'order_launch_date': order_launch_date,
+                        'order_execution_date': order_execution_date,
+                        'responsible': responsible,
+                        'comment': comment,
                     }
     return orders_data
