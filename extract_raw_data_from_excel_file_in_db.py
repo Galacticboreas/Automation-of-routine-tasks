@@ -50,21 +50,24 @@ if __name__ == '__main__':
         orders_data=orders_data,
         workbook=workbook,
         sheet=config.sheet_kits_1C,
-        expression=config.expression
+        expression=config.expression,
+        config=config,
     )
 
     # Собираем данные по проценту готовности заказов
     orders_data = extract_data_job_monitor_for_work_centers(
         orders_data=orders_data,
         workbook=workbook,
-        sheet=config.sheet_percentage_1C
+        sheet=config.sheet_percentage_1C,
+        config=config,
     )
 
     # Собираем основной и дополнительные заказы с их описанием
     orders_data = extract_data_production_orders_report(
         orders_data=orders_data,
         workbook=workbook,
-        sheet=config.sheet_division_1C
+        sheet=config.sheet_division_1C,
+        config=config,
     )
 
     # Создаем таблицы в БД

@@ -1,4 +1,5 @@
 import re
+from tqdm import tqdm
 
 def extract_data_moving_sets_of_furniture(orders_data: dict,
                                           error_log: dict,
@@ -24,7 +25,7 @@ def extract_data_moving_sets_of_furniture(orders_data: dict,
     """
     workbook_sheet = workbook[config.sheet_moving_1C]
 
-    for value in workbook_sheet.iter_rows(min_row=2, values_only=True):
+    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True), ncols=80, ascii=True, desc=config.sheet_moving_1C):
         full_order_number = value[0]
         composite_key = full_order_number[43:47] + full_order_number[28:33]
         furniture_name = value[1]
@@ -65,7 +66,8 @@ def extract_data_moving_sets_of_furniture(orders_data: dict,
 def extract_data_release_of_assembly_kits(orders_data: dict,
                                           workbook: object,
                                           sheet: str,
-                                          expression: str) -> dict:
+                                          expression: str,
+                                          config: object) -> dict:
     """Функция предназначена для сбора данных из отчета "Перемещение
     комплектов мебели"
 
@@ -80,7 +82,7 @@ def extract_data_release_of_assembly_kits(orders_data: dict,
     """
     workbook_sheet = workbook[sheet]
 
-    for value in workbook_sheet.iter_rows(min_row=2, values_only=True):
+    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True), ncols=80, ascii=True, desc=config.sheet_kits_1C):
         full_order_number = value[0]
         composite_key = full_order_number[43:47] + full_order_number[28:33]
         cutting_workshop_for_assembly = value[2]
@@ -99,7 +101,8 @@ def extract_data_release_of_assembly_kits(orders_data: dict,
 
 def extract_data_job_monitor_for_work_centers(orders_data: dict,
                                               workbook: object,
-                                              sheet: str) -> dict:
+                                              sheet: str,
+                                              config: object) -> dict:
     """Функция предназначена для сбора данных из отчета "Монитор рабочих центров"
 
     Args:
@@ -112,7 +115,7 @@ def extract_data_job_monitor_for_work_centers(orders_data: dict,
     """
     workbook_sheet = workbook[sheet]
 
-    for value in workbook_sheet.iter_rows(min_row=2):
+    for value in tqdm(workbook_sheet.iter_rows(min_row=2), ncols=80, ascii=True, desc=config.sheet_percentage_1C):
         pattern = r'[0-9]{11}[" "]["о"]["т"][" "][0-9]{2}["."][0-9]{2}["."][0-9]{4}[" "][0-9]{2}[":"][0-9]{2}[":"][0-9]{2}'
         if value[0].font.b:
             order_number = value[0].value
@@ -155,7 +158,8 @@ def extract_data_job_monitor_for_work_centers(orders_data: dict,
 
 def extract_data_production_orders_report(orders_data: dict,
                                           workbook: object,
-                                          sheet: str) -> dict:
+                                          sheet: str,
+                                          config: object) -> dict:
     """Функция предназначена для сбора данных из отчета "Заказы на производство"
 
     Args:
@@ -169,7 +173,7 @@ def extract_data_production_orders_report(orders_data: dict,
     child_orders_temp = dict()
     workbook_sheet = workbook[sheet]
 
-    for value in workbook_sheet.iter_rows(min_row=2, values_only=True):
+    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True), ncols=80, ascii=True, desc=config.sheet_division_1C):
         full_order_date = value[0]
         order_date = full_order_date[6:10]
         order_number = "{:05d}".format(value[1])

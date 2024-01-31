@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from enum import Enum
+from tqdm import tqdm
 
 from sqlalchemy import Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import DeclarativeBase, relationship
@@ -155,7 +156,7 @@ def import_data_to_db_production_orders(orders_data: dict, session: object)-> ob
     Returns:
         session: sqlalchemy session
     """
-    for key in orders_data:
+    for key in tqdm(orders_data, ncols=80, ascii=True, desc='Импорт в БД'):
         if not (key == 'ErrorLog'):
             # Основной заказ на производство
             order = OrderRowData()
