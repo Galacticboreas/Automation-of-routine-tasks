@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from enum import Enum
-from tqdm import tqdm
 
 from sqlalchemy import Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import DeclarativeBase, relationship
+from tqdm import tqdm
 
 
 class Base(DeclarativeBase):
@@ -145,7 +145,7 @@ class DescriptionAdditionalOrderRowData(Base):
     order = relationship("OrderRowData", back_populates="descriptions")
 
 
-def import_data_to_db_production_orders(orders_data: dict, session: object)-> object:
+def import_data_to_db_production_orders(orders_data: dict, session: object) -> object:
     """Функция импорта данных из словаря данных о заказаз на производство
     в таблицы БД.
 
@@ -201,7 +201,7 @@ def import_data_to_db_production_orders(orders_data: dict, session: object)-> ob
                     child.number_of_details_plan = orders_data[key]['child_orders']['job monitor for work centers'][key_child]['number_of_details_plan']
                     child.number_of_details_fact = orders_data[key]['child_orders']['job monitor for work centers'][key_child]['number_of_details_fact']
                     child.order = order
-            
+
             # Описание заказа из отчета "Заказы на производство"
             if orders_data[key].get('report description of production orders'):
                 description_main = DescriptionMainOrderRowData()
@@ -214,7 +214,7 @@ def import_data_to_db_production_orders(orders_data: dict, session: object)-> ob
                 description_main.responsible = orders_data[key]['report description of production orders']['responsible']
                 description_main.comment = orders_data[key]['report description of production orders']['comment']
                 description_main.order = order
-            
+
             # Описание дополнительных заказов к основному заказу на производство
             if orders_data[key].get('child_orders') and orders_data[key]['child_orders'].get('report description of production orders'):
                 for key_child_descr in orders_data[key]['child_orders']['report description of production orders']:

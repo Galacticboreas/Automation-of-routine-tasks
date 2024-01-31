@@ -1,5 +1,7 @@
 import re
+
 from tqdm import tqdm
+
 
 def extract_data_moving_sets_of_furniture(orders_data: dict,
                                           error_log: dict,
@@ -47,7 +49,7 @@ def extract_data_moving_sets_of_furniture(orders_data: dict,
         elif (expression in full_order_number) and (ordered is None):
             error_log[composite_key] = {
                 'error description': {
-                    'type of error' : 'ошибка учета',
+                    'type of error': 'ошибка учета',
                     'name of the report': sheet,
                     'troubleshooting steps': 'отправить номер заказа в отдел учета для корректировки перемещения',
                     },
@@ -62,6 +64,7 @@ def extract_data_moving_sets_of_furniture(orders_data: dict,
                     }
     orders_data['ErrorLog'] = error_log
     return orders_data
+
 
 def extract_data_release_of_assembly_kits(orders_data: dict,
                                           workbook: object,
@@ -98,6 +101,7 @@ def extract_data_release_of_assembly_kits(orders_data: dict,
                     'assembly_shop': assembly_shop,
                 }
     return orders_data
+
 
 def extract_data_job_monitor_for_work_centers(orders_data: dict,
                                               workbook: object,
@@ -155,6 +159,7 @@ def extract_data_job_monitor_for_work_centers(orders_data: dict,
                             'number_of_details_fact': number_of_details_fact,
                     }
     return orders_data
+
 
 def extract_data_production_orders_report(orders_data: dict,
                                           workbook: object,
