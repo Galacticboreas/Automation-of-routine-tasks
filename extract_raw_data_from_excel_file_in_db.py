@@ -10,6 +10,9 @@
     данные из словаря в таблицы БД.
 """
 
+from datetime import datetime
+from pprint import pprint
+
 from openpyxl import load_workbook
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
@@ -28,11 +31,16 @@ error_log = dict()
 
 if __name__ == '__main__':
     # Открыть файл с исходными данными
+    print("Открываем файл с исходными данными")
+    start = datetime.now()
     workbook = load_workbook(
         filename=config.source_file,
         read_only=True,
         data_only=True
     )
+    end = datetime.now()
+    total_time = (end - start).total_seconds()
+    print(f"Время на открытие файла: {total_time} с")
 
     # Собираем данные по перемещению комплектов мебели
     orders_data = extract_data_moving_sets_of_furniture(
@@ -70,6 +78,8 @@ if __name__ == '__main__':
         config=config,
     )
 
+    pprint(orders_data['202300920'])
+
     # Создаем таблицы в БД
     engine = create_engine('sqlite:///data/orders_row_data.db')
     Base.metadata.drop_all(engine)
@@ -80,4 +90,9 @@ if __name__ == '__main__':
     session = import_data_to_db_production_orders(orders_data=orders_data,
                                                   session=session)
     # Сохраняем таблицы в БД
+    start = datetime.now()
     session.commit()
+    end = datetime.now()
+    total_time = (end - start).total_seconds()
+    print(f"Время на сохранение данных: {total_time} с")
+    print("Программа завершена!")
