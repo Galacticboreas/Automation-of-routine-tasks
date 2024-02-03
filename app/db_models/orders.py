@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 
 from sqlalchemy import Column, Float, ForeignKey, Integer, String
@@ -17,16 +17,58 @@ class Report:
 
 
 @dataclass
-class ReportMovingSetsOfFurniture(Report):
-    full_order_number: str = None
-    furniture_name: str = ""
-    furniture_atricle: str = ""
-    oredered: int = 0
+class ReportReleaseOfAssemblyKits():
+    cutting_workshop_for_assembly: int = 0
+    cutting_workshop_for_painting: int = 0
+    paint_shop_for_assembly: int = 0
+    assembly_shop: int = 0
+
+
+@dataclass
+class ReportMonitorForWorkCenter():
+    percentage_of_readiness_to_cut: float = None
+    number_of_details_plan: int = 0
+    number_of_details_fact: int = 0
+
+
+@dataclass
+class ReportMovingSetsOfFurniture():
+    ordered: int = 0
     released: int = 0
     remains_to_release: int = 0
 
+
+@dataclass
+class ReportDescriptionOfProductionOrder():
+    order_date: str = ""
+    order_number: str = ""
+    order_company: str = ""
+    order_division: str = ""
+    order_launch_date: str = ""
+    order_execution_date: str = ""
+    responsible: str = ""
+    comment: str = ""
+
+
+@dataclass
+class ReportSubOrder():
+    report_monitor_for_work_center: dict = field(default_factory=dict)
+    report_description_of_production_orders: dict = field(default_factory=dict)
+
+
+@dataclass
+class ReportMainOrder(Report):
+    full_order_number: str = None
+    furniture_name: str = ""
+    furniture_article: str = ""
+    report_moving_sets_of_furniture: object = None
+    report_release_of_assembly_kits: object = None
+    report_monitor_for_work_center: object = None
+    report_sub_order: object = None
+    report_description_main_order: object = None
+
     def __post_init__(self):
-        self.furniture_atricle = Report.extractor.get_article(self.furniture_name)
+        self.furniture_article = Report.extractor.get_article(self.furniture_name)
 
 
 @dataclass
@@ -75,16 +117,14 @@ class OrderRowData(Base):
                                           uselist=False,
                                           back_populates='order',
                                           cascade="all, delete")
-    descriptions = relationship("DescriptionAdditionalOrderRowData",
-                                back_populates='order')
-    monitor_for_work_center = relationship("JobMonitorForWorkCenters",
+    monitor_for_work_center = relationship("MonitorForWorkCenters",
                                            back_populates='order',
                                            cascade="all, delete",
                                            uselist=False)
-    child_order = relationship("ChildOrder",
+    sub_order = relationship("SubOrder",
                                back_populates='order',
                                cascade="all, delete")
-    child_order_report_description = relationship("ChildOrderReportDescription",
+    sub_order_report_description = relationship("SubOrderReportDescription",
                                                   back_populates='order',
                                                   cascade="all, delete")
 
@@ -100,8 +140,8 @@ class ReleaseOfAssemblyKitsRowData(Base):
     order = relationship("OrderRowData", back_populates="release_of_assemblykits")
 
 
-class JobMonitorForWorkCenters(Base):
-    __tablename__ = 'job_monitor_for_work_centers'
+class MonitorForWorkCenters(Base):
+    __tablename__ = 'monitor_for_work_centers'
     id = Column(Integer(), primary_key=True)
     percentage_of_readiness_to_cut = Column(Float(), default=0)
     number_of_details_plan = Column(Integer(), default=0)
@@ -111,8 +151,8 @@ class JobMonitorForWorkCenters(Base):
                          back_populates="monitor_for_work_center")
 
 
-class ChildOrder(Base):
-    __tablename__ = 'child_orders'
+class SubOrder(Base):
+    __tablename__ = 'sub_orders'
     id = Column(Integer(), primary_key=True)
     composite_key = Column(String(9), nullable=False)
     percentage_of_readiness_to_cut = Column(Float(), default=0)
@@ -120,11 +160,11 @@ class ChildOrder(Base):
     number_of_details_fact = Column(Integer(), default=0)
     order_id = Column(Integer(), ForeignKey("orders_row_data.id"))
     order = relationship("OrderRowData",
-                         back_populates="child_order")
+                         back_populates="sub_order")
 
 
-class ChildOrderReportDescription(Base):
-    __tablename__ = 'child_orders_report_description'
+class SubOrderReportDescription(Base):
+    __tablename__ = 'sub_orders_report_description'
     id = Column(Integer(), primary_key=True)
     composite_key = Column(String(9), nullable=False)
     order_date = Column(String())
@@ -136,7 +176,7 @@ class ChildOrderReportDescription(Base):
     responsible = Column(String())
     comment = Column(String(), default="")
     order_id = Column(Integer(), ForeignKey("orders_row_data.id"))
-    order = relationship("OrderRowData", back_populates="child_order_report_description")
+    order = relationship("OrderRowData", back_populates="sub_order_report_description")
 
 
 class DescriptionMainOrderRowData(Base):
@@ -154,19 +194,26 @@ class DescriptionMainOrderRowData(Base):
     order = relationship("OrderRowData", back_populates="description_main_order")
 
 
-class DescriptionAdditionalOrderRowData(Base):
-    __tablename__ = "descriptions_row_data"
-    id = Column(Integer(), primary_key=True)
-    date_create = Column(String())
-    order_number = Column(String())
-    division = Column(String())
-    date_launch = Column(String())
-    date_execution = Column(String())
-    responsible = Column(String())
-    comment = Column(String())
-    order_id = Column(Integer(), ForeignKey("orders_row_data.id"))
-    order = relationship("OrderRowData", back_populates="descriptions")
-
+def import_data_to_db_main_orders(orders_data: dict, session: object) -> object:
+    for key in tqdm(orders_data, ncols=80, ascii=True, desc='Импорт в БД: основной заказ'):
+        order_main = OrderRowData()
+        order_main.composite_key = key
+        order_main.full_order_number = orders_data[key].full_order_number
+        order_main.furniture_name = orders_data[key].furniture_name
+        order_main.furniture_article = orders_data[key].furniture_article
+        order_main.ordered = orders_data[key].report_moving_sets_of_furniture.ordered
+        order_main.released = orders_data[key].report_moving_sets_of_furniture.released
+        order_main.remains_to_release = orders_data[key].report_moving_sets_of_furniture.remains_to_release
+        
+        if orders_data[key].report_release_of_assembly_kits:
+            release = ReleaseOfAssemblyKitsRowData()
+            release.cutting_shop_for_assembly = orders_data[key].report_release_of_assembly_kits.cutting_workshop_for_assembly
+            release.cutting_shop_for_painting = orders_data[key].report_release_of_assembly_kits.cutting_workshop_for_painting
+            release.paint_shop_for_assembly = orders_data[key].report_release_of_assembly_kits.paint_shop_for_assembly
+            release.assembly_shop = orders_data[key].report_release_of_assembly_kits.assembly_shop
+            release.order = order_main
+        session.add(order_main)
+    return session
 
 def import_data_to_db_production_orders(orders_data: dict, session: object) -> object:
     """Функция импорта данных из словаря данных о заказаз на производство
@@ -209,7 +256,7 @@ def import_data_to_db_production_orders(orders_data: dict, session: object) -> o
 
             # Процент готовности заказа (данные монитора рабочих центров)
             if orders_data[key].get('job monitor for work centers'):
-                monitor = JobMonitorForWorkCenters()
+                monitor = MonitorForWorkCenters()
                 monitor.percentage_of_readiness_to_cut = orders_data[key]['job monitor for work centers']['percentage_of_readiness_to_cut']
                 monitor.number_of_details_plan = orders_data[key]['job monitor for work centers']['number_of_details_plan']
                 monitor.number_of_details_fact = orders_data[key]['job monitor for work centers']['number_of_details_fact']
@@ -218,7 +265,7 @@ def import_data_to_db_production_orders(orders_data: dict, session: object) -> o
             # Данные о дополнительных заказах (раскрой на буфер и раскрой на прокраску)
             if orders_data[key].get('child_orders') and orders_data[key]['child_orders'].get('job monitor for work centers'):
                 for key_child in orders_data[key]['child_orders']['job monitor for work centers']:
-                    child = ChildOrder()
+                    child = SubOrder()
                     child.composite_key = key_child
                     child.percentage_of_readiness_to_cut = orders_data[key]['child_orders']['job monitor for work centers'][key_child]['percentage_of_readiness_to_cut']
                     child.number_of_details_plan = orders_data[key]['child_orders']['job monitor for work centers'][key_child]['number_of_details_plan']
@@ -241,7 +288,7 @@ def import_data_to_db_production_orders(orders_data: dict, session: object) -> o
             # Описание дополнительных заказов к основному заказу на производство
             if orders_data[key].get('child_orders') and orders_data[key]['child_orders'].get('report description of production orders'):
                 for key_child_descr in orders_data[key]['child_orders']['report description of production orders']:
-                    child_description = ChildOrderReportDescription()
+                    child_description = SubOrderReportDescription()
                     child_description.composite_key = key_child_descr
                     child_description.order_date = orders_data[key]['child_orders']['report description of production orders'][key_child_descr]['order_date']
                     child_description.order_number = orders_data[key]['child_orders']['report description of production orders'][key_child_descr]['order_number']

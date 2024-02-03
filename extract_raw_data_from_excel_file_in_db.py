@@ -11,6 +11,7 @@
 """
 
 from datetime import datetime
+from pprint import pprint
 
 from openpyxl import load_workbook
 from sqlalchemy import create_engine
@@ -77,6 +78,7 @@ if __name__ == '__main__':
         config=config,
     )
 
+    pprint(orders_data['202300920'])
 
     # Создаем таблицы в БД
     engine = create_engine('sqlite:///data/orders_row_data.db')
