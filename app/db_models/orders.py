@@ -5,9 +5,28 @@ from sqlalchemy import Column, Float, ForeignKey, Integer, String
 from sqlalchemy.orm import DeclarativeBase, relationship
 from tqdm import tqdm
 
+from app import ArticleExtractor
 
-class Base(DeclarativeBase):
-    pass
+
+class Report:
+
+    extractor = ArticleExtractor()
+
+    def __init__(self):
+        pass
+
+
+@dataclass
+class ReportMovingSetsOfFurniture(Report):
+    full_order_number: str = None
+    furniture_name: str = ""
+    furniture_atricle: str = ""
+    oredered: int = 0
+    released: int = 0
+    remains_to_release: int = 0
+
+    def __post_init__(self):
+        self.furniture_atricle = Report.extractor.get_article(self.furniture_name)
 
 
 @dataclass
@@ -32,6 +51,10 @@ class MaterialColumn(Enum):
     MATERIAL_ARTICLE = 4
     MATERIAL_NAME = 5
     MATERIAL_AMOUNT = 7
+
+
+class Base(DeclarativeBase):
+    pass
 
 
 class OrderRowData(Base):

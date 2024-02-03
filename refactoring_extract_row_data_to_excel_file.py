@@ -11,6 +11,7 @@
 """
 
 from datetime import datetime
+from pprint import pprint
 
 from openpyxl import load_workbook
 from sqlalchemy import create_engine
@@ -21,6 +22,7 @@ from app import (ArticleExtractor, Base, ReportSettingsOrders,
                  extract_data_moving_sets_of_furniture,
                  extract_data_production_orders_report,
                  extract_data_release_of_assembly_kits,
+                 extract_data_to_report_moving_sets_of_furnuture,
                  import_data_to_db_production_orders)
 
 config = ReportSettingsOrders()
@@ -42,55 +44,9 @@ if __name__ == '__main__':
     print(f"Время на открытие файла: {total_time} с")
 
     # Собираем данные по перемещению комплектов мебели
-    orders_data = extract_data_moving_sets_of_furniture(
-        orders_data=orders_data,
-        error_log=error_log,
-        workbook=workbook,
-        sheet=config.sheet_moving_1C,
-        expression=config.expression,
-        extractor=extractor,
-        config=config
-    )
-
-    # Собираем данные по выпуску комплектов мебели
-    orders_data = extract_data_release_of_assembly_kits(
-        orders_data=orders_data,
-        workbook=workbook,
-        sheet=config.sheet_kits_1C,
-        expression=config.expression,
-        config=config,
-    )
-
-    # Собираем данные по проценту готовности заказов
-    orders_data = extract_data_job_monitor_for_work_centers(
-        orders_data=orders_data,
-        workbook=workbook,
-        sheet=config.sheet_percentage_1C,
-        config=config,
-    )
-
-    # Собираем основной и дополнительные заказы с их описанием
-    orders_data = extract_data_production_orders_report(
-        orders_data=orders_data,
-        workbook=workbook,
-        sheet=config.sheet_division_1C,
-        config=config,
-    )
-
-
-    # Создаем таблицы в БД
-    engine = create_engine('sqlite:///data/orders_row_data.db')
-    Base.metadata.drop_all(engine)
-    Base.metadata.create_all(engine)
-    session = Session(bind=engine)
-
-    # Импортируем данные в БД
-    session = import_data_to_db_production_orders(orders_data=orders_data,
-                                                  session=session)
-    # Сохраняем таблицы в БД
-    start = datetime.now()
-    session.commit()
-    end = datetime.now()
-    total_time = (end - start).total_seconds()
-    print(f"Время на сохранение данных: {total_time} с")
-    print("Программа завершена!")
+    orders_data = extract_data_to_report_moving_sets_of_furnuture(orders_data=orders_data,
+                                                                  workbook=workbook,
+                                                                  sheet=config.sheet_moving_1C,
+                                                                  expression=config.expression)
+    print(len(orders_data))
+    pprint(orders_data['202300920'])
