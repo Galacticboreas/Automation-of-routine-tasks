@@ -18,12 +18,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from app import (ArticleExtractor, Base, ReportSettingsOrders,
-                 extract_data_job_monitor_for_work_centers,
-                 extract_data_moving_sets_of_furniture,
-                 extract_data_production_orders_report,
-                 extract_data_release_of_assembly_kits,
-                 extract_data_to_report_moving_sets_of_furnuture,
-                 import_data_to_db_production_orders)
+                 extract_data_to_report_moving_sets_of_furnuture)
 
 config = ReportSettingsOrders()
 extractor = ArticleExtractor()
