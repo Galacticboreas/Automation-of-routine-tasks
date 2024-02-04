@@ -40,6 +40,7 @@ class ReportMovingSetsOfFurniture():
 
 @dataclass
 class ReportDescriptionOfProductionOrder():
+    composite_key: str = ""
     order_date: str = ""
     order_number: str = ""
     order_company: str = ""
@@ -196,6 +197,7 @@ class DescriptionMainOrderRowData(Base):
 
 def import_data_to_db_main_orders(orders_data: dict, session: object) -> object:
     for key in tqdm(orders_data, ncols=80, ascii=True, desc='Импорт в БД: основной заказ'):
+        # Основной заказ на производство (данные учете)
         order_main = OrderRowData()
         order_main.composite_key = key
         order_main.full_order_number = orders_data[key].full_order_number
@@ -205,6 +207,7 @@ def import_data_to_db_main_orders(orders_data: dict, session: object) -> object:
         order_main.released = orders_data[key].report_moving_sets_of_furniture.released
         order_main.remains_to_release = orders_data[key].report_moving_sets_of_furniture.remains_to_release
         
+        # Перемещение комплектов мебели (данные учета)
         if orders_data[key].report_release_of_assembly_kits:
             release = ReleaseOfAssemblyKitsRowData()
             release.cutting_shop_for_assembly = orders_data[key].report_release_of_assembly_kits.cutting_workshop_for_assembly
@@ -212,6 +215,52 @@ def import_data_to_db_main_orders(orders_data: dict, session: object) -> object:
             release.paint_shop_for_assembly = orders_data[key].report_release_of_assembly_kits.paint_shop_for_assembly
             release.assembly_shop = orders_data[key].report_release_of_assembly_kits.assembly_shop
             release.order = order_main
+
+        # Процент готовности заказа (данные монитора рабочих центров)
+        if orders_data[key].report_monitor_for_work_center:
+            monitor = MonitorForWorkCenters()
+            monitor.percentage_of_readiness_to_cut = orders_data[key].report_monitor_for_work_center.percentage_of_readiness_to_cut
+            monitor.number_of_details_plan = orders_data[key].report_monitor_for_work_center.number_of_details_plan
+            monitor.number_of_details_fact = orders_data[key].report_monitor_for_work_center.number_of_details_fact
+            monitor.order = order_main
+        
+        # Данные о дополнительных заказах (раскрой на буфер и раскрой на покраску)
+        if orders_data[key].report_sub_order and orders_data[key].report_sub_order.report_monitor_for_work_center:
+            for key_sub_order in orders_data[key].report_sub_order.report_monitor_for_work_center:
+                sub_order = SubOrder()
+                sub_order.composite_key = key_sub_order
+                sub_order.percentage_of_readiness_to_cut = orders_data[key].report_sub_order.report_monitor_for_work_center[key_sub_order].percentage_of_readiness_to_cut
+                sub_order.number_of_details_plan = orders_data[key].report_sub_order.report_monitor_for_work_center[key_sub_order].number_of_details_plan
+                sub_order.number_of_details_fact = orders_data[key].report_sub_order.report_monitor_for_work_center[key_sub_order].number_of_details_fact
+                sub_order.order = order_main
+        
+        # Описание заказа из отчета "Заказы на производство"
+        if orders_data[key].report_description_main_order:
+            description_main = DescriptionMainOrderRowData()
+            description_main.order_date = orders_data[key].report_description_main_order.order_date
+            description_main.order_number = orders_data[key].report_description_main_order.order_number
+            description_main.order_company = orders_data[key].report_description_main_order.order_company
+            description_main.order_division = orders_data[key].report_description_main_order.order_division
+            description_main.order_launch_date = orders_data[key].report_description_main_order.order_launch_date
+            description_main.order_execution_date = orders_data[key].report_description_main_order.order_execution_date
+            description_main.responsible = orders_data[key].report_description_main_order.responsible
+            description_main.comment = orders_data[key].report_description_main_order.comment
+            description_main.order = order_main
+        
+        # Описание дополнительных заказов к основному заказу на производство
+        if orders_data[key].report_sub_order and orders_data[key].report_sub_order.report_description_of_production_orders:
+            for key_sub_order in orders_data[key].report_sub_order.report_description_of_production_orders:
+                sub_description = SubOrderReportDescription()
+                sub_description.composite_key = orders_data[key].report_sub_order.report_description_of_production_orders[key_sub_order].composite_key
+                sub_description.order_date = orders_data[key].report_sub_order.report_description_of_production_orders[key_sub_order].order_date
+                sub_description.order_number = orders_data[key].report_sub_order.report_description_of_production_orders[key_sub_order].order_number
+                sub_description.order_company = orders_data[key].report_sub_order.report_description_of_production_orders[key_sub_order].order_company
+                sub_description.order_division = orders_data[key].report_sub_order.report_description_of_production_orders[key_sub_order].order_division
+                sub_description.order_launch_date = orders_data[key].report_sub_order.report_description_of_production_orders[key_sub_order].order_launch_date
+                sub_description.order_execution_date = orders_data[key].report_sub_order.report_description_of_production_orders[key_sub_order].order_execution_date
+                sub_description.responsible = orders_data[key].report_sub_order.report_description_of_production_orders[key_sub_order].responsible
+                sub_description.comment = orders_data[key].report_sub_order.report_description_of_production_orders[key_sub_order].comment
+                sub_description.order = order_main
         session.add(order_main)
     return session
 

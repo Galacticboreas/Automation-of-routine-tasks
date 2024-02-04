@@ -295,6 +295,7 @@ def extract_data_to_report_production_orders_report(orders_data: dict,
                 sub_orders_temp[composite_key] = composite_key_parent
                 report_sub_order = ReportSubOrder()
                 report_description = ReportDescriptionOfProductionOrder()
+                report_description.composite_key = composite_key
                 report_description.order_date = order_date
                 report_description.order_number = order_number
                 report_description.order_company = order_company
@@ -309,6 +310,7 @@ def extract_data_to_report_production_orders_report(orders_data: dict,
             if orders_data.get(composite_key_parent) and orders_data[composite_key_parent].report_sub_order:
                 sub_orders_temp[composite_key] = composite_key_parent
                 report_description = ReportDescriptionOfProductionOrder()
+                report_description.composite_key = composite_key
                 report_description.order_date = order_date
                 report_description.order_number = order_number
                 report_description.order_company = order_company
@@ -321,6 +323,7 @@ def extract_data_to_report_production_orders_report(orders_data: dict,
             
             if sub_orders_temp.get(composite_key_parent) and orders_data.get(sub_orders_temp[composite_key_parent]) and orders_data[sub_orders_temp[composite_key_parent]].report_sub_order:
                 report_description = ReportDescriptionOfProductionOrder()
+                report_description.composite_key = composite_key
                 report_description.order_date = order_date
                 report_description.order_number = order_number
                 report_description.order_company = order_company
@@ -334,6 +337,7 @@ def extract_data_to_report_production_orders_report(orders_data: dict,
             if sub_orders_temp.get(composite_key_parent) and orders_data.get(sub_orders_temp[composite_key_parent]) and not orders_data[sub_orders_temp[composite_key_parent]].report_sub_order:
                 sub_orders_temp[composite_key] = composite_key_parent
                 report_description = ReportDescriptionOfProductionOrder()
+                report_description.composite_key = composite_key
                 report_description.order_date = order_date
                 report_description.order_number = order_number
                 report_description.order_company = order_company
@@ -351,6 +355,7 @@ def extract_data_to_report_production_orders_report(orders_data: dict,
         else:
             if orders_data.get(composite_key):
                 report_description = ReportDescriptionOfProductionOrder()
+                report_description.composite_key = composite_key
                 report_description.order_date = order_date
                 report_description.order_number = order_number
                 report_description.order_company = order_company
