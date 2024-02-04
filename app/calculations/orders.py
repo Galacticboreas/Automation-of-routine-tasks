@@ -2,10 +2,10 @@ import re
 
 from tqdm import tqdm
 
-from app.db_models.orders import (Report, ReportMainOrder,
-                                  ReportMonitorForWorkCenter,
+from app.db_models.orders import (Report, ReportDescriptionOfProductionOrder,
+                                  ReportMainOrder, ReportMonitorForWorkCenter,
                                   ReportMovingSetsOfFurniture,
-                                  ReportReleaseOfAssemblyKits, ReportSubOrder, ReportDescriptionOfProductionOrder)
+                                  ReportReleaseOfAssemblyKits, ReportSubOrder)
 
 
 def extract_data_to_report_moving_sets_of_furnuture(orders_data: dict,
@@ -199,7 +199,7 @@ def extract_data_to_report_monitor_for_work_centers(orders_data: dict,
                     report_sub_order = ReportSubOrder()
                     orders_data[composite_key].report_sub_order = report_sub_order
                     orders_data[composite_key].report_sub_order.report_monitor_for_work_center[key] = report_monitor
-                
+
                 if orders_data.get(composite_key) and orders_data[composite_key].report_sub_order:
                     # Заполняем процент готовности подзаказа
                     report_monitor = ReportMonitorForWorkCenter()
@@ -210,10 +210,8 @@ def extract_data_to_report_monitor_for_work_centers(orders_data: dict,
                     orders_data[composite_key].report_sub_order.report_monitor_for_work_center[key] = report_monitor
     return orders_data
 
-def extract_data_job_monitor_for_work_centers(orders_data: dict,
-                                              workbook: object,
-                                              sheet: str,
-                                              config: object) -> dict:
+
+def extract_data_job_monitor_for_work_centers(orders_data: dict, workbook: object, sheet: str, config: object) -> dict:
     """Функция предназначена для сбора данных из отчета "Монитор рабочих центров"
 
     Args:
@@ -320,7 +318,7 @@ def extract_data_to_report_production_orders_report(orders_data: dict,
                 report_description.responsible = responsible
                 report_description.comment = comment
                 orders_data[composite_key_parent].report_sub_order.report_description_of_production_orders[composite_key] = report_description
-            
+
             if sub_orders_temp.get(composite_key_parent) and orders_data.get(sub_orders_temp[composite_key_parent]) and orders_data[sub_orders_temp[composite_key_parent]].report_sub_order:
                 report_description = ReportDescriptionOfProductionOrder()
                 report_description.composite_key = composite_key
@@ -333,7 +331,7 @@ def extract_data_to_report_production_orders_report(orders_data: dict,
                 report_description.responsible = responsible
                 report_description.comment = comment
                 orders_data[sub_orders_temp[composite_key_parent]].report_sub_order.report_description_of_production_orders[composite_key] = report_description
-            
+
             if sub_orders_temp.get(composite_key_parent) and orders_data.get(sub_orders_temp[composite_key_parent]) and not orders_data[sub_orders_temp[composite_key_parent]].report_sub_order:
                 sub_orders_temp[composite_key] = composite_key_parent
                 report_description = ReportDescriptionOfProductionOrder()

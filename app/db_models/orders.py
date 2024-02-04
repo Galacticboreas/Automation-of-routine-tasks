@@ -122,12 +122,10 @@ class OrderRowData(Base):
                                            back_populates='order',
                                            cascade="all, delete",
                                            uselist=False)
-    sub_order = relationship("SubOrder",
-                               back_populates='order',
-                               cascade="all, delete")
+    sub_order = relationship("SubOrder", back_populates='order', cascade="all, delete")
     sub_order_report_description = relationship("SubOrderReportDescription",
-                                                  back_populates='order',
-                                                  cascade="all, delete")
+                                                back_populates='order',
+                                                cascade="all, delete")
 
 
 class ReleaseOfAssemblyKitsRowData(Base):
@@ -206,7 +204,7 @@ def import_data_to_db_main_orders(orders_data: dict, session: object) -> object:
         order_main.ordered = orders_data[key].report_moving_sets_of_furniture.ordered
         order_main.released = orders_data[key].report_moving_sets_of_furniture.released
         order_main.remains_to_release = orders_data[key].report_moving_sets_of_furniture.remains_to_release
-        
+
         # Перемещение комплектов мебели (данные учета)
         if orders_data[key].report_release_of_assembly_kits:
             release = ReleaseOfAssemblyKitsRowData()
@@ -223,7 +221,7 @@ def import_data_to_db_main_orders(orders_data: dict, session: object) -> object:
             monitor.number_of_details_plan = orders_data[key].report_monitor_for_work_center.number_of_details_plan
             monitor.number_of_details_fact = orders_data[key].report_monitor_for_work_center.number_of_details_fact
             monitor.order = order_main
-        
+
         # Данные о дополнительных заказах (раскрой на буфер и раскрой на покраску)
         if orders_data[key].report_sub_order and orders_data[key].report_sub_order.report_monitor_for_work_center:
             for key_sub_order in orders_data[key].report_sub_order.report_monitor_for_work_center:
@@ -233,7 +231,7 @@ def import_data_to_db_main_orders(orders_data: dict, session: object) -> object:
                 sub_order.number_of_details_plan = orders_data[key].report_sub_order.report_monitor_for_work_center[key_sub_order].number_of_details_plan
                 sub_order.number_of_details_fact = orders_data[key].report_sub_order.report_monitor_for_work_center[key_sub_order].number_of_details_fact
                 sub_order.order = order_main
-        
+
         # Описание заказа из отчета "Заказы на производство"
         if orders_data[key].report_description_main_order:
             description_main = DescriptionMainOrderRowData()
@@ -246,7 +244,7 @@ def import_data_to_db_main_orders(orders_data: dict, session: object) -> object:
             description_main.responsible = orders_data[key].report_description_main_order.responsible
             description_main.comment = orders_data[key].report_description_main_order.comment
             description_main.order = order_main
-        
+
         # Описание дополнительных заказов к основному заказу на производство
         if orders_data[key].report_sub_order and orders_data[key].report_sub_order.report_description_of_production_orders:
             for key_sub_order in orders_data[key].report_sub_order.report_description_of_production_orders:
@@ -263,6 +261,7 @@ def import_data_to_db_main_orders(orders_data: dict, session: object) -> object:
                 sub_description.order = order_main
         session.add(order_main)
     return session
+
 
 def import_data_to_db_production_orders(orders_data: dict, session: object) -> object:
     """Функция импорта данных из словаря данных о заказаз на производство

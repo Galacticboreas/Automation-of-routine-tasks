@@ -5,13 +5,12 @@
     копируются в файл excel на отдельные листы, предназначенные
     для каждого вида отчета.
     Скрипт последовательно проходит по листам excel и собирает
-    данные по заказу на производство в словарь.
+    данные по заказу на производство в таблицы данных на основе классов.
     После сбора всей информации с листов, скрипт импортирует
     данные из словаря в таблицы БД.
 """
 
 from datetime import datetime
-from pprint import pprint
 
 from openpyxl import load_workbook
 from sqlalchemy import create_engine
@@ -54,11 +53,11 @@ if __name__ == '__main__':
                                                                   sheet=config.sheet_kits_1C,
                                                                   expression=config.expression)
 
-    # Собираем данные по проценту готовности заказов 
+    # Собираем данные по проценту готовности заказов
     orders_data = extract_data_to_report_monitor_for_work_centers(orders_data=orders_data,
                                                                   workbook=workbook,
                                                                   sheet=config.sheet_percentage_1C)
- 
+
     # Собираем основной и дополнительные заказы с их описанием
     orders_data = extract_data_to_report_production_orders_report(orders_data=orders_data,
                                                                   workbook=workbook,
@@ -72,7 +71,7 @@ if __name__ == '__main__':
 
     session = import_data_to_db_main_orders(orders_data=orders_data,
                                             session=session)
-    
+
     start = datetime.now()
     session.commit()
     end = datetime.now()
