@@ -213,6 +213,13 @@ def import_data_to_db_main_orders(orders_data: dict, session: object) -> object:
             release.paint_shop_for_assembly = orders_data[key].report_release_of_assembly_kits.paint_shop_for_assembly
             release.assembly_shop = orders_data[key].report_release_of_assembly_kits.assembly_shop
             release.order = order_main
+        if orders_data.get(key) and not orders_data[key].report_release_of_assembly_kits:
+            release = ReleaseOfAssemblyKitsRowData()
+            release.cutting_shop_for_assembly = 0
+            release.cutting_shop_for_painting = 0
+            release.paint_shop_for_assembly = 0
+            release.assembly_shop = 0
+            release.order = order_main
 
         # Процент готовности заказа (данные монитора рабочих центров)
         if orders_data[key].report_monitor_for_work_center:
