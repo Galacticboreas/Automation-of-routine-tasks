@@ -209,5 +209,5 @@ for index, row in df_sub_orders_descriptions.iterrows():
             }
         })
 
-
-pprint(sub_orders_descriptions[437])
+for index, row in df_marge.iterrows():
+    print(row)
