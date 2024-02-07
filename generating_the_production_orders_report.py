@@ -6,6 +6,8 @@ from pprint import pprint
 import pandas as pd
 from sqlalchemy import create_engine
 
+from app import Bunch
+
 # Обращаемся к БД Исходные данные по заказам на производство
 try:
     engine = create_engine('sqlite:///data/orders_row_data.db')
@@ -209,5 +211,15 @@ for index, row in df_sub_orders_descriptions.iterrows():
             }
         })
 
-for index, row in df_marge.iterrows():
-    print(row)
+# for index, row in df_marge.iterrows():
+#     print(row)
+
+Division = Bunch # Использовать набор вместо defaultdict
+
+order = Division(cut=Division(cut_to_buffer="раскрой на буфер", cut_to_paint="раскрой на покаску"), paint_to_buffer=Division(paint="покраска на буфер"))
+
+pprint(order)
+# >>>
+# {'cut': {'cut_to_buffer': 'раскрой на буфер',
+#          'cut_to_paint': 'раскрой на покаску'},
+#  'paint_to_buffer': {'paint': 'покраска на буфер'}}
