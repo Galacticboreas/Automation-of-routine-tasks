@@ -1,4 +1,5 @@
 import re
+from pprint import pprint
 
 from tqdm import tqdm
 
@@ -179,6 +180,7 @@ def extract_data_to_report_monitor_for_work_centers(orders_data: dict,
                 report_monitor.percentage_of_readiness_to_cut = percentage_of_readiness_to_cut
                 report_monitor.number_of_details_plan = number_of_details_plan
                 report_monitor.number_of_details_fact = number_of_details_fact
+                report_monitor.type_of_movement = "Готовность раскрой"
                 orders_data[composite_key].report_monitor_for_work_center = report_monitor
         else:
             sub_order = re.search(pattern, value[0].value)
@@ -195,17 +197,19 @@ def extract_data_to_report_monitor_for_work_centers(orders_data: dict,
                     report_monitor.percentage_of_readiness_to_cut = percentage_of_readiness_to_cut
                     report_monitor.number_of_details_plan = number_of_details_plan
                     report_monitor.number_of_details_fact = number_of_details_fact
+                    report_monitor.type_of_movement = "Раскрой на буфер"
                     # Заполняем отчет для подзаказа по ключу
                     report_sub_order = ReportSubOrder()
                     orders_data[composite_key].report_sub_order = report_sub_order
                     orders_data[composite_key].report_sub_order.report_monitor_for_work_center[key] = report_monitor
 
-                if orders_data.get(composite_key) and orders_data[composite_key].report_sub_order:
+                if orders_data.get(composite_key) and not orders_data[composite_key].report_sub_order.report_monitor_for_work_center.get(key):
                     # Заполняем процент готовности подзаказа
                     report_monitor = ReportMonitorForWorkCenter()
                     report_monitor.percentage_of_readiness_to_cut = percentage_of_readiness_to_cut
                     report_monitor.number_of_details_plan = number_of_details_plan
                     report_monitor.number_of_details_fact = number_of_details_fact
+                    report_monitor.type_of_movement = "Раскрой на покраску"
                     # Заполняем отчет для подзаказа по ключу
                     orders_data[composite_key].report_sub_order.report_monitor_for_work_center[key] = report_monitor
     return orders_data

@@ -54,7 +54,7 @@ df_monitor = pd.read_sql("monitor_for_work_centers", engine)
 df_monitor = df_monitor.drop('id', axis=1)
 
 # Меняем расположение колонок
-cols = ['order_id', 'percentage_of_readiness_to_cut', 'number_of_details_plan', 'number_of_details_fact']
+cols = ['order_id', 'percentage_of_readiness_to_cut', 'number_of_details_plan', 'number_of_details_fact', 'type_of_movement']
 df_monitor = df_monitor[cols + [c for c in df_monitor.columns if c not in cols]]
 
 # Переименовываем id заказа
@@ -98,6 +98,7 @@ cols = ['id',
         'percentage_of_readiness_to_cut',
         'number_of_details_plan',
         'number_of_details_fact',
+        'type_of_movement',
         'order_company',
         'order_division',
         'order_launch_date',
@@ -163,20 +164,27 @@ df_sub_orders_descriptions.rename(columns={
 sub_orders_percentage = defaultdict(list)
 for index, row in df_sub_orders.iterrows():
     key = row['id']
+    composite_key_sub = row['composite_key_sub']
+    percentage_of_readiness_to_cut_sub = row['percentage_of_readiness_to_cut_sub']
+    number_of_details_plan_sub = row['number_of_details_plan_sub']
+    number_of_details_fact_sub = row['number_of_details_fact_sub']
+    type_of_movement = row['type_of_movement']
     if sub_orders_percentage.get(key):
         sub_orders_percentage[key].append({
-            row['composite_key_sub']: {
-                'percentage_of_readiness_to_cut_sub': row['percentage_of_readiness_to_cut_sub'],
-                'number_of_details_plan_sub': row['number_of_details_plan_sub'],
-                'number_of_details_fact_sub': row['number_of_details_fact_sub'],
+            composite_key_sub: {
+                'percentage_of_readiness_to_cut_sub': percentage_of_readiness_to_cut_sub,
+                'number_of_details_plan_sub': number_of_details_plan_sub,
+                'number_of_details_fact_sub': number_of_details_fact_sub,
+                'type_of_movement': type_of_movement,
             }
         })
     else:
         sub_orders_percentage[key].append({
-            row['composite_key_sub']: {
-                'percentage_of_readiness_to_cut_sub': row['percentage_of_readiness_to_cut_sub'],
-                'number_of_details_plan_sub': row['number_of_details_plan_sub'],
-                'number_of_details_fact_sub': row['number_of_details_fact_sub'],
+            composite_key_sub: {
+                'percentage_of_readiness_to_cut_sub': percentage_of_readiness_to_cut_sub,
+                'number_of_details_plan_sub': number_of_details_plan_sub,
+                'number_of_details_fact_sub': number_of_details_fact_sub,
+                'type_of_movement': type_of_movement,
             }
         })
 
@@ -184,42 +192,44 @@ for index, row in df_sub_orders.iterrows():
 sub_orders_descriptions = defaultdict(list)
 for index, row in df_sub_orders_descriptions.iterrows():
     key = row['id']
+    composite_key_sub_description = row['composite_key_sub_description']
+    order_date_sub_description = row['order_date_sub_description']
+    order_number_sub_description = row['order_number_sub_description']
+    order_company_sub_description = row['order_company_sub_description']
+    order_division_sub_description = row['order_division_sub_description']
+    order_launch_date_sub_description = row['order_launch_date_sub_description']
+    order_execution_date_sub_description = row['order_execution_date_sub_description']
+    responsible_sub_description = row['responsible_sub_description']
+    comment_sub_description = row['comment_sub_description']
     if sub_orders_descriptions.get(key):
         sub_orders_descriptions[key].append({
-            row['composite_key_sub_description']: {
-                'order_date_sub_description': row['order_date_sub_description'],
-                'order_number_sub_description': row['order_number_sub_description'],
-                'order_company_sub_description': row['order_company_sub_description'],
-                'order_division_sub_description': row['order_division_sub_description'],
-                'order_launch_date_sub_description': row['order_launch_date_sub_description'],
-                'order_execution_date_sub_description': row['order_execution_date_sub_description'],
-                'responsible_sub_description': row['responsible_sub_description'],
-                'comment_sub_description': row['comment_sub_description'],
+            composite_key_sub_description: {
+                'order_date_sub_description': order_date_sub_description,
+                'order_number_sub_description': order_number_sub_description,
+                'order_company_sub_description': order_company_sub_description,
+                'order_division_sub_description': order_division_sub_description,
+                'order_launch_date_sub_description': order_launch_date_sub_description,
+                'order_execution_date_sub_description': order_execution_date_sub_description,
+                'responsible_sub_description': responsible_sub_description,
+                'comment_sub_description': comment_sub_description,
             }
         })
     else:
         sub_orders_descriptions[key].append({
-            row['composite_key_sub_description']: {
-                'order_date_sub_description': row['order_date_sub_description'],
-                'order_number_sub_description': row['order_number_sub_description'],
-                'order_company_sub_description': row['order_company_sub_description'],
-                'order_division_sub_description': row['order_division_sub_description'],
-                'order_launch_date_sub_description': row['order_launch_date_sub_description'],
-                'order_execution_date_sub_description': row['order_execution_date_sub_description'],
-                'responsible_sub_description': row['responsible_sub_description'],
-                'comment_sub_description': row['comment_sub_description'],
+            composite_key_sub_description: {
+                'order_date_sub_description': order_date_sub_description,
+                'order_number_sub_description': order_number_sub_description,
+                'order_company_sub_description': order_company_sub_description,
+                'order_division_sub_description': order_division_sub_description,
+                'order_launch_date_sub_description': order_launch_date_sub_description,
+                'order_execution_date_sub_description': order_execution_date_sub_description,
+                'responsible_sub_description': responsible_sub_description,
+                'comment_sub_description': comment_sub_description,
             }
         })
 
-# for index, row in df_marge.iterrows():
-#     print(row)
-
-Division = Bunch # Использовать набор вместо defaultdict
-
-order = Division(cut=Division(cut_to_buffer="раскрой на буфер", cut_to_paint="раскрой на покаску"), paint_to_buffer=Division(paint="покраска на буфер"))
-
-pprint(order)
-# >>>
-# {'cut': {'cut_to_buffer': 'раскрой на буфер',
-#          'cut_to_paint': 'раскрой на покаску'},
-#  'paint_to_buffer': {'paint': 'покраска на буфер'}}
+for index, row in df_marge.iterrows():
+    key = row['id']
+    type_of_movement = row['type_of_movement']
+    if key == 437:
+        print(f'key = {key}, type_of_movement = {type_of_movement}')

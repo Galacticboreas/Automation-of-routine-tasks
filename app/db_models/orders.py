@@ -29,6 +29,7 @@ class ReportMonitorForWorkCenter():
     percentage_of_readiness_to_cut: float = None
     number_of_details_plan: int = 0
     number_of_details_fact: int = 0
+    type_of_movement: str = ""
 
 
 @dataclass
@@ -145,6 +146,7 @@ class MonitorForWorkCenters(Base):
     percentage_of_readiness_to_cut = Column(Float(), default=0)
     number_of_details_plan = Column(Integer(), default=0)
     number_of_details_fact = Column(Integer(), default=0)
+    type_of_movement = Column(String(), default="")
     order_id = Column(Integer(), ForeignKey("orders_row_data.id"))
     order = relationship("OrderRowData",
                          back_populates="monitor_for_work_center")
@@ -157,6 +159,7 @@ class SubOrder(Base):
     percentage_of_readiness_to_cut = Column(Float(), default=0)
     number_of_details_plan = Column(Integer(), default=0)
     number_of_details_fact = Column(Integer(), default=0)
+    type_of_movement = Column(String(), default="")
     order_id = Column(Integer(), ForeignKey("orders_row_data.id"))
     order = relationship("OrderRowData",
                          back_populates="sub_order")
@@ -227,6 +230,7 @@ def import_data_to_db_main_orders(orders_data: dict, session: object) -> object:
             monitor.percentage_of_readiness_to_cut = orders_data[key].report_monitor_for_work_center.percentage_of_readiness_to_cut
             monitor.number_of_details_plan = orders_data[key].report_monitor_for_work_center.number_of_details_plan
             monitor.number_of_details_fact = orders_data[key].report_monitor_for_work_center.number_of_details_fact
+            monitor.type_of_movement = orders_data[key].report_monitor_for_work_center.type_of_movement
             monitor.order = order_main
 
         # Данные о дополнительных заказах (раскрой на буфер и раскрой на покраску)
@@ -237,6 +241,7 @@ def import_data_to_db_main_orders(orders_data: dict, session: object) -> object:
                 sub_order.percentage_of_readiness_to_cut = orders_data[key].report_sub_order.report_monitor_for_work_center[key_sub_order].percentage_of_readiness_to_cut
                 sub_order.number_of_details_plan = orders_data[key].report_sub_order.report_monitor_for_work_center[key_sub_order].number_of_details_plan
                 sub_order.number_of_details_fact = orders_data[key].report_sub_order.report_monitor_for_work_center[key_sub_order].number_of_details_fact
+                sub_order.type_of_movement = orders_data[key].report_sub_order.report_monitor_for_work_center[key_sub_order].type_of_movement
                 sub_order.order = order_main
 
         # Описание заказа из отчета "Заказы на производство"
@@ -315,6 +320,7 @@ def import_data_to_db_production_orders(orders_data: dict, session: object) -> o
                 monitor.percentage_of_readiness_to_cut = orders_data[key]['job monitor for work centers']['percentage_of_readiness_to_cut']
                 monitor.number_of_details_plan = orders_data[key]['job monitor for work centers']['number_of_details_plan']
                 monitor.number_of_details_fact = orders_data[key]['job monitor for work centers']['number_of_details_fact']
+                monitor.type_of_movement = orders_data[key]['job monitor for work centers']['type_of_movement']
                 monitor.order = order
 
             # Данные о дополнительных заказах (раскрой на буфер и раскрой на прокраску)
@@ -325,6 +331,7 @@ def import_data_to_db_production_orders(orders_data: dict, session: object) -> o
                     child.percentage_of_readiness_to_cut = orders_data[key]['child_orders']['job monitor for work centers'][key_child]['percentage_of_readiness_to_cut']
                     child.number_of_details_plan = orders_data[key]['child_orders']['job monitor for work centers'][key_child]['number_of_details_plan']
                     child.number_of_details_fact = orders_data[key]['child_orders']['job monitor for work centers'][key_child]['number_of_details_fact']
+                    child.type_of_movement = orders_data[key]['child_orders']['job monitor for work centers'][key_child]['type_of_movement']
                     child.order = order
 
             # Описание заказа из отчета "Заказы на производство"
