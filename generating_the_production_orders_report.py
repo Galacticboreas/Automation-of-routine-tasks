@@ -160,7 +160,7 @@ df_sub_orders_descriptions.rename(columns={
 }, inplace=True)
 # df_sub_orders_descriptions
 
-# Сохраняем данные о проценте готовности по раскрою подчиненных заказах в словарь
+# Сохраняем данные о проценте готовности по раскрою подчиненных заказав в словарь
 sub_orders_percentage = defaultdict(list)
 for index, row in df_sub_orders.iterrows():
     key = row['id']
@@ -228,8 +228,9 @@ for index, row in df_sub_orders_descriptions.iterrows():
             }
         })
 
+resulting_report_for_the_file = dict()
 for index, row in df_marge.iterrows():
     key = row['id']
     type_of_movement = row['type_of_movement']
     if key == 437:
-        print(f'key = {key}, type_of_movement = {type_of_movement}')
+        pprint(row)
