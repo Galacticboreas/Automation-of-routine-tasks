@@ -5,3 +5,4 @@ from app.db_models.orders import *
 from app.gui.anotherwindow import *
 from app.gui.mainwindow import *
 from app.settings.settings import *
+from app.utils.utils import *
