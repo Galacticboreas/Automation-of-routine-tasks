@@ -1,5 +1,4 @@
 import re
-from pprint import pprint
 
 from tqdm import tqdm
 
@@ -487,6 +486,7 @@ def extract_data_production_orders_report(orders_data: dict,
                     }
     return orders_data
 
+
 class Bunch(dict):
     def __init__(self, *args, ** kwds):
         super(Bunch, self).__init__(*args, **kwds)
@@ -509,6 +509,7 @@ def percentage_of_assembly(ordered: int,
     assembly = assembly_shop if assembly_shop > released else released
     percentage = assembly / ordered
     return percentage
+
 
 def determine_if_there_is_a_painting(orders_report: object,
                                      product_is_painted: dict,
@@ -535,8 +536,8 @@ def determine_if_there_is_a_painting(orders_report: object,
             painted = False
             not_painted = 0
             for sub_order_descript in sub_orders_descript:
-                if sub_order_descript.order_division== "Цех покраски":
-                        painted = True
+                if sub_order_descript.order_division == "Цех покраски":
+                    painted = True
                 if sub_order_descript.order_division == "Цех раскроечный":
                     not_painted += 1
             if not_painted == 1 and not painted:

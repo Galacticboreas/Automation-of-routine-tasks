@@ -151,7 +151,7 @@ for order in orders_report:
         percentage_of_readiness_to_cut_to_paint,
         number_of_details_plan_cut_to_paint,
         number_of_details_fact_cut_to_paint,
-         
+
     ]
     sheet.append(data)
 
