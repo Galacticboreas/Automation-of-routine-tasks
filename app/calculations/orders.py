@@ -491,3 +491,73 @@ class Bunch(dict):
     def __init__(self, *args, ** kwds):
         super(Bunch, self).__init__(*args, **kwds)
         self.__dict__ = self
+
+
+def percentage_of_assembly(ordered: int,
+                           released: int,
+                           assembly_shop: int) -> float:
+    """Функция расчитывает процент готовности сборки
+
+    Args:
+        ordered (int): [Количество изделий в заказе]
+        released (int): [Выпущено комплектов]
+        assembly_shop (int): [Выпуск сборка, отчет мастеров]
+
+    Returns:
+        float: [Процент готовности заказа по сборке]
+    """
+    assembly = assembly_shop if assembly_shop > released else released
+    percentage = assembly / ordered
+    return percentage
+
+def determine_if_there_is_a_painting(orders_report: object,
+                                     product_is_painted: dict,
+                                     session_db: object,
+                                     table_in_db: object) -> dict:
+    """Функция определяет является изделие крашенным или нет.
+    Если изделие красится, то дополнительно определяется есть
+    в заказе на раскрой не крашенные детали.
+
+    Args:
+        orders_report (object): [Итоговый отчет для файла]
+        product_is_painted (dict): [Словарь для кэширования статуса]
+        session_db (object): [Открытый сеанс с БД]
+        table_in_db (object): [Таблица в базе данных с описанием заказов]
+
+    Returns:
+        dict: [Словарь со статусом для painted_status: крашеное/не крашеное
+                                   для cutting_status: есть корпус/ пусто]
+    """
+    for order in orders_report:
+        furniture_article = order.furniture_article
+        sub_orders_descript = session_db.query(table_in_db).filter(table_in_db.order_id == order.id)
+        if sub_orders_descript:
+            painted = False
+            not_painted = 0
+            for sub_order_descript in sub_orders_descript:
+                if sub_order_descript.order_division== "Цех покраски":
+                        painted = True
+                if sub_order_descript.order_division == "Цех раскроечный":
+                    not_painted += 1
+            if not_painted == 1 and not painted:
+                painted_status = "н/к"
+                cutting_status = ""
+                product_is_painted[furniture_article] = {
+                    'painted_status': painted_status,
+                    'cutting_status': cutting_status,
+                }
+            if not_painted == 1 and painted:
+                painted_status = "к"
+                cutting_status = "нет корпуса"
+                product_is_painted[furniture_article] = {
+                    'painted_status': painted_status,
+                    'cutting_status': cutting_status,
+                }
+            if not_painted == 2 and painted:
+                painted_status = "к"
+                cutting_status = "есть корпус"
+                product_is_painted[furniture_article] = {
+                    'painted_status': painted_status,
+                    'cutting_status': cutting_status,
+                }
+    return product_is_painted
