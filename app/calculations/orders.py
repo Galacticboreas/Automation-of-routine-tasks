@@ -167,7 +167,7 @@ def extract_data_to_report_monitor_for_work_centers(orders_data: dict,
     workbook_sheet = workbook[sheet]
 
     for value in tqdm(workbook_sheet.iter_rows(min_row=2), ncols=80, ascii=True, desc=sheet):
-        pattern = r'[0-9]{11}[" "]["о"]["т"][" "][0-9]{2}["."][0-9]{2}["."][0-9]{4}[" "][0-9]{2}[":"][0-9]{2}[":"][0-9]{2}'
+        pattern = r'[0-9]{11}[" "]["о"]["т"][" "][0-9]{2}["."][0-9]{2}["."][0-9]{4}[" "][0-9]{1,2}[":"][0-9]{2}[":"][0-9]{2}'
         if value[0].font.b:
             order_number = value[0].value
             composite_key = order_number[21:25] + order_number[6:11]
@@ -527,9 +527,9 @@ def determine_if_there_is_a_painting(orders_report: object,
 
     Returns:
         dict: [Словарь со статусом для painted_status: крашеное/не крашеное
-                                   для cutting_status: есть корпус/ пусто]
+                                   для cutting_status: есть корпус/ нет корпуса]
     """
-    for order in orders_report:
+    for order in tqdm(orders_report, ncols=80, ascii=True, desc="Присвоить статус крешенным издлиям"):
         furniture_article = order.furniture_article
         sub_orders_descript = session_db.query(table_in_db).filter(table_in_db.order_id == order.id)
         if sub_orders_descript:
@@ -580,3 +580,11 @@ def calculate_percentage_of_painting_readiness(painted_status: str,
     if painted_status == "к" and cutting_shop_for_painting:
         percentage_of_painting = paint_shop_for_assembly / cutting_shop_for_painting
     return percentage_of_painting
+
+def calculation_number_details_fact_paint_to_assembly(percentage_of_readiness_painting: float,
+                                                      number_of_details_plan_cut_to_paint: int,
+                                                      ) -> int:
+    number_of_details = ""
+    if percentage_of_readiness_painting:
+        number_of_details = int(percentage_of_readiness_painting * number_of_details_plan_cut_to_paint)
+    return number_of_details

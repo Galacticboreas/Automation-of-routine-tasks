@@ -9,10 +9,12 @@
 Определяет готовность к сборке изделий и формирует задание на сбору.
 
 Определяет возможность к запуску заказов в производство на основании
-приоритета и технической готовности к запуску в цех раскрой.
+приоритета и технической готовности к запуску в цех раскрой и формирует
+задание на раскрой.
 """
 
 from datetime import datetime
+from tqdm import tqdm
 
 from openpyxl import Workbook
 from sqlalchemy import create_engine
@@ -23,18 +25,29 @@ from app import (ORDERS_REPORT_COLUMNS_NAME, ORDERS_REPORT_MAIN_SHEET, Base,
                  OrderRowData, ReleaseOfAssemblyKitsRowData,
                  ReportSettingsOrders, SubOrder, SubOrderReportDescription,
                  calculate_percentage_of_painting_readiness,
-                 determine_if_there_is_a_painting, percentage_of_assembly)
+                 determine_if_there_is_a_painting, percentage_of_assembly, calculation_number_details_fact_paint_to_assembly)
 
 # Обращаемся к БД Исходные данные по заказам на производство
+start_all = datetime.now()
+start = datetime.now()
+print('Открываем БД исходные данные для отчета')
 try:
     engine = create_engine('sqlite:///data/orders_row_data.db')
     session = Session(autoflush=False, bind=engine)
     Base.metadata.create_all(bind=engine)
 except FileNotFoundError:
     print('По указанному пути файл не обнаружен')
+end = datetime.now()
+total_time = (end - start).total_seconds()
+print(f'Выполнено за: {total_time} c.')
 
+start = datetime.now()
+print('Запрос в БД основной заказ')
 with session as db:
     orders_report = db.query(OrderRowData).all()
+end = datetime.now()
+total_time = (end - start).total_seconds()
+print(f'Выполнен за : {total_time} c.')
 
 workbook = Workbook()
 config = ReportSettingsOrders()
@@ -54,8 +67,9 @@ product_is_painted = determine_if_there_is_a_painting(
     session_db=db,
     table_in_db=SubOrderReportDescription   # Подчиненные заказы
 )
+
 # Записываем данные в файл отчета Excel
-for order in orders_report:
+for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирование отчета"):
     furniture_article = order.furniture_article
     ordered = order.ordered
     released = order.released
@@ -156,6 +170,18 @@ for order in orders_report:
         cutting_shop_for_painting=cutting_shop_for_painting,
         paint_shop_for_assembly=paint_shop_for_assembly,
     )
+
+    description_sub = db.query(SubOrderReportDescription).filter(SubOrderReportDescription.order_id == order.id)
+    order_division_paint = ""
+    composite_key_paint = ""
+    number_of_details_fact_paint_to_assembly = ""
+    if description_sub:
+        for d_sub in description_sub:
+            if d_sub.order_division == "Цех покраски":
+                order_division_paint = d_sub.order_division
+                composite_key_paint = d_sub.composite_key
+                number_of_details_fact_paint_to_assembly = calculation_number_details_fact_paint_to_assembly(percentage_of_readiness_painting=percentage_of_readiness_painting,
+                                                                                                  number_of_details_plan_cut_to_paint=number_of_details_plan_cut_to_paint)
     # Итоговые данные отчета
     data = [
         furniture_article,
@@ -193,9 +219,20 @@ for order in orders_report:
         percentage_of_readiness_to_cut_to_paint,
         number_of_details_plan_cut_to_paint,
         number_of_details_fact_cut_to_paint,
-
+        order_division_paint,
+        composite_key_paint,
+        percentage_of_readiness_painting,
+        number_of_details_plan_cut_to_paint,
+        number_of_details_fact_paint_to_assembly
     ]
     sheet.append(data)
 
+start = datetime.now()
+print('Сохранение отчета в файл Excel')
 # Сохранить данные в файл Excel
 workbook.save(filename=config.path_dir + config.path_data + config.report_file_name + " от " + dt + config.not_macros)
+end = datetime.now()
+total_time = (end - start).total_seconds()
+print(f'Выполнено за : {total_time} c.')
+total_time_all = (end - start_all).total_seconds()
+print(f'Программа завершена за: {total_time_all} c')
