@@ -14,7 +14,8 @@ def extract_data_to_report_moving_sets_of_furnuture(orders_data: dict,
                                                     expression: str,) -> dict:
     workbook_sheet = workbook[sheet]
 
-    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True), ncols=80, ascii=True, desc=sheet):
+    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True),
+                      ncols=80, ascii=True, desc=sheet):
         full_order_number = value[0]
         composite_key = full_order_number[43:47] + full_order_number[28:33]
         furniture_name = value[1]
@@ -61,7 +62,8 @@ def extract_data_moving_sets_of_furniture(orders_data: dict,
     """
     workbook_sheet = workbook[config.sheet_moving_1C]
 
-    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True), ncols=80, ascii=True, desc=config.sheet_moving_1C):
+    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True),
+                      ncols=80, ascii=True, desc=config.sheet_moving_1C):
         full_order_number = value[0]
         composite_key = full_order_number[43:47] + full_order_number[28:33]
         furniture_name = value[1]
@@ -85,7 +87,8 @@ def extract_data_moving_sets_of_furniture(orders_data: dict,
                 'error description': {
                     'type of error': 'ошибка учета',
                     'name of the report': sheet,
-                    'troubleshooting steps': 'отправить номер заказа в отдел учета для корректировки перемещения',
+                    'troubleshooting steps': 'отправить номер заказа в отдел \
+                        учета для корректировки перемещения',
                     },
                 'order parameters': {
                     'full_order_number': full_order_number,
@@ -106,7 +109,8 @@ def extract_data_to_report_release_of_assembly_kits(orders_data: dict,
                                                     expression: str) -> dict:
     workbook_sheet = workbook[sheet]
 
-    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True), ncols=80, ascii=True, desc=sheet):
+    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True),
+                      ncols=80, ascii=True, desc=sheet):
         full_order_number = value[0]
         composite_key = full_order_number[43:47] + full_order_number[28:33]
         cutting_workshop_for_assembly = value[2]
@@ -143,7 +147,8 @@ def extract_data_release_of_assembly_kits(orders_data: dict,
     """
     workbook_sheet = workbook[sheet]
 
-    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True), ncols=80, ascii=True, desc=config.sheet_kits_1C):
+    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True),
+                      ncols=80, ascii=True, desc=config.sheet_kits_1C):
         full_order_number = value[0]
         composite_key = full_order_number[43:47] + full_order_number[28:33]
         cutting_workshop_for_assembly = value[2]
@@ -166,7 +171,8 @@ def extract_data_to_report_monitor_for_work_centers(orders_data: dict,
                                                     sheet: str) -> dict:
     workbook_sheet = workbook[sheet]
 
-    for value in tqdm(workbook_sheet.iter_rows(min_row=2), ncols=80, ascii=True, desc=sheet):
+    for value in tqdm(workbook_sheet.iter_rows(min_row=2),
+                      ncols=80, ascii=True, desc=sheet):
         pattern = r'[0-9]{11}[" "]["о"]["т"][" "][0-9]{2}["."][0-9]{2}["."][0-9]{4}[" "][0-9]{1,2}[":"][0-9]{2}[":"][0-9]{2}'
         if value[0].font.b:
             order_number = value[0].value
@@ -190,7 +196,8 @@ def extract_data_to_report_monitor_for_work_centers(orders_data: dict,
                 number_of_details_plan = value[3].value
                 number_of_details_fact = value[4].value
 
-                if orders_data.get(composite_key) and not orders_data[composite_key].report_sub_order:
+                if orders_data.get(composite_key) \
+                        and not orders_data[composite_key].report_sub_order:
                     # Заполняем процент готовности подзаказа
                     report_monitor = ReportMonitorForWorkCenter()
                     report_monitor.percentage_of_readiness_to_cut = percentage_of_readiness_to_cut
@@ -202,7 +209,8 @@ def extract_data_to_report_monitor_for_work_centers(orders_data: dict,
                     orders_data[composite_key].report_sub_order = report_sub_order
                     orders_data[composite_key].report_sub_order.report_monitor_for_work_center[key] = report_monitor
 
-                if orders_data.get(composite_key) and not orders_data[composite_key].report_sub_order.report_monitor_for_work_center.get(key):
+                if orders_data.get(composite_key) \
+                        and not orders_data[composite_key].report_sub_order.report_monitor_for_work_center.get(key):
                     # Заполняем процент готовности подзаказа
                     report_monitor = ReportMonitorForWorkCenter()
                     report_monitor.percentage_of_readiness_to_cut = percentage_of_readiness_to_cut
@@ -214,8 +222,12 @@ def extract_data_to_report_monitor_for_work_centers(orders_data: dict,
     return orders_data
 
 
-def extract_data_job_monitor_for_work_centers(orders_data: dict, workbook: object, sheet: str, config: object) -> dict:
-    """Функция предназначена для сбора данных из отчета "Монитор рабочих центров"
+def extract_data_job_monitor_for_work_centers(orders_data: dict,
+                                              workbook: object,
+                                              sheet: str,
+                                              config: object) -> dict:
+    """Функция предназначена для сбора данных из отчета "Монитор
+    рабочих центров"
 
     Args:
         orders_data (dict): [данные по заказам на производство]
@@ -227,8 +239,9 @@ def extract_data_job_monitor_for_work_centers(orders_data: dict, workbook: objec
     """
     workbook_sheet = workbook[sheet]
 
-    for value in tqdm(workbook_sheet.iter_rows(min_row=2), ncols=80, ascii=True, desc=config.sheet_percentage_1C):
-        pattern = r'[0-9]{11}[" "]["о"]["т"][" "][0-9]{2}["."][0-9]{2}["."][0-9]{4}[" "][0-9]{2}[":"][0-9]{2}[":"][0-9]{2}'
+    for value in tqdm(workbook_sheet.iter_rows(min_row=2),
+                      ncols=80, ascii=True, desc=config.sheet_percentage_1C):
+        pattern = r'[0-9]{11}[" "]["о"]["т"][" "][0-9]{2}["."][0-9]{2}["."][0-9]{4}[" "][0-9]{1,2}[":"][0-9]{2}[":"][0-9]{2}'
         if value[0].font.b:
             order_number = value[0].value
             composite_key = order_number[21:25] + order_number[6:11]
@@ -250,7 +263,8 @@ def extract_data_job_monitor_for_work_centers(orders_data: dict, workbook: objec
                 number_of_details_plan = value[3].value
                 number_of_details_fact = value[4].value
 
-                if orders_data.get(composite_key) and not orders_data[composite_key].get('child_orders'):
+                if orders_data.get(composite_key) \
+                        and not orders_data[composite_key].get('child_orders'):
                     orders_data[composite_key]['child_orders'] = {
                         'job monitor for work centers': {
                             key: {
@@ -260,7 +274,8 @@ def extract_data_job_monitor_for_work_centers(orders_data: dict, workbook: objec
                                 }
                                 }
                             }
-                if orders_data.get(composite_key) and orders_data[composite_key]['child_orders']:
+                if orders_data.get(composite_key) \
+                        and orders_data[composite_key]['child_orders']:
                     orders_data[composite_key]['child_orders']['job monitor for work centers'][key] = {
                             'percentage_of_readiness_to_cut': percentage_of_readiness_to_cut,
                             'number_of_details_plan': number_of_details_plan,
@@ -275,7 +290,8 @@ def extract_data_to_report_production_orders_report(orders_data: dict,
     sub_orders_temp = dict()
     workbook_sheet = workbook[sheet]
 
-    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True), ncols=80, ascii=True, desc=sheet):
+    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True),
+                      ncols=80, ascii=True, desc=sheet):
         full_order_date = value[0]
         order_date = full_order_date[6:10]
         order_number = "{:05d}".format(value[1])
@@ -292,7 +308,8 @@ def extract_data_to_report_production_orders_report(orders_data: dict,
         # Собираем информацию о дополнительных заказах
         if order_parent:
             composite_key_parent = order_parent[43:47] + order_parent[28:33]
-            if orders_data.get(composite_key_parent) and not orders_data[composite_key_parent].report_sub_order:
+            if orders_data.get(composite_key_parent) \
+                    and not orders_data[composite_key_parent].report_sub_order:
                 sub_orders_temp[composite_key] = composite_key_parent
                 report_sub_order = ReportSubOrder()
                 report_description = ReportDescriptionOfProductionOrder()
@@ -308,7 +325,8 @@ def extract_data_to_report_production_orders_report(orders_data: dict,
                 orders_data[composite_key_parent].report_sub_order = report_sub_order
                 orders_data[composite_key_parent].report_sub_order.report_description_of_production_orders[composite_key] = report_description
 
-            if orders_data.get(composite_key_parent) and orders_data[composite_key_parent].report_sub_order:
+            if orders_data.get(composite_key_parent) \
+                    and orders_data[composite_key_parent].report_sub_order:
                 sub_orders_temp[composite_key] = composite_key_parent
                 report_description = ReportDescriptionOfProductionOrder()
                 report_description.composite_key = composite_key
@@ -322,7 +340,9 @@ def extract_data_to_report_production_orders_report(orders_data: dict,
                 report_description.comment = comment
                 orders_data[composite_key_parent].report_sub_order.report_description_of_production_orders[composite_key] = report_description
 
-            if sub_orders_temp.get(composite_key_parent) and orders_data.get(sub_orders_temp[composite_key_parent]) and orders_data[sub_orders_temp[composite_key_parent]].report_sub_order:
+            if sub_orders_temp.get(composite_key_parent) \
+                and orders_data.get(sub_orders_temp[composite_key_parent]) \
+                    and orders_data[sub_orders_temp[composite_key_parent]].report_sub_order:
                 report_description = ReportDescriptionOfProductionOrder()
                 report_description.composite_key = composite_key
                 report_description.order_date = full_order_date[:10]
@@ -335,7 +355,9 @@ def extract_data_to_report_production_orders_report(orders_data: dict,
                 report_description.comment = comment
                 orders_data[sub_orders_temp[composite_key_parent]].report_sub_order.report_description_of_production_orders[composite_key] = report_description
 
-            if sub_orders_temp.get(composite_key_parent) and orders_data.get(sub_orders_temp[composite_key_parent]) and not orders_data[sub_orders_temp[composite_key_parent]].report_sub_order:
+            if sub_orders_temp.get(composite_key_parent) \
+                and orders_data.get(sub_orders_temp[composite_key_parent]) \
+                    and not orders_data[sub_orders_temp[composite_key_parent]].report_sub_order:
                 sub_orders_temp[composite_key] = composite_key_parent
                 report_description = ReportDescriptionOfProductionOrder()
                 report_description.composite_key = composite_key
@@ -386,7 +408,8 @@ def extract_data_production_orders_report(orders_data: dict,
     child_orders_temp = dict()
     workbook_sheet = workbook[sheet]
 
-    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True), ncols=80, ascii=True, desc=config.sheet_division_1C):
+    for value in tqdm(workbook_sheet.iter_rows(min_row=2, values_only=True),
+                      ncols=80, ascii=True, desc=config.sheet_division_1C):
         full_order_date = value[0]
         order_date = full_order_date[6:10]
         order_number = "{:05d}".format(value[1])
@@ -403,7 +426,8 @@ def extract_data_production_orders_report(orders_data: dict,
         # Собираем информацию о дополнительных заказах
         if order_parent:
             composite_key_parent = order_parent[43:47] + order_parent[28:33]
-            if orders_data.get(composite_key_parent) and not orders_data[composite_key_parent].get('child_orders'):
+            if orders_data.get(composite_key_parent) \
+                    and not orders_data[composite_key_parent].get('child_orders'):
                 child_orders_temp[composite_key] = composite_key_parent
                 orders_data[composite_key_parent]['child_orders'] = {
                     'report description of production orders': {
@@ -419,7 +443,8 @@ def extract_data_production_orders_report(orders_data: dict,
                             }
                             }
                             }
-            if orders_data.get(composite_key_parent) and orders_data[composite_key_parent]['child_orders'].get('report description of production orders'):
+            if orders_data.get(composite_key_parent) \
+                    and orders_data[composite_key_parent]['child_orders'].get('report description of production orders'):
                 child_orders_temp[composite_key] = composite_key_parent
                 orders_data[composite_key_parent]['child_orders']['report description of production orders'][composite_key] = {
                     'order_date': order_date,
@@ -431,7 +456,8 @@ def extract_data_production_orders_report(orders_data: dict,
                     'responsible': responsible,
                     'comment': comment,
                     }
-            if orders_data.get(composite_key_parent) and not orders_data[composite_key_parent]['child_orders'].get('report description of production orders'):
+            if orders_data.get(composite_key_parent) \
+                    and not orders_data[composite_key_parent]['child_orders'].get('report description of production orders'):
                 child_orders_temp[composite_key] = composite_key_parent
                 orders_data[composite_key_parent]['child_orders']['report description of production orders'] = {
                     composite_key: {
@@ -445,7 +471,9 @@ def extract_data_production_orders_report(orders_data: dict,
                         'comment': comment,
                         }
                 }
-            if child_orders_temp.get(composite_key_parent) and orders_data.get(child_orders_temp[composite_key_parent]) and orders_data[child_orders_temp[composite_key_parent]]['child_orders'].get('report description of production orders'):
+            if child_orders_temp.get(composite_key_parent) \
+                and orders_data.get(child_orders_temp[composite_key_parent]) \
+                    and orders_data[child_orders_temp[composite_key_parent]]['child_orders'].get('report description of production orders'):
                 orders_data[child_orders_temp[composite_key_parent]]['child_orders']['report description of production orders'][composite_key] = {
                     'order_date': order_date,
                     'order_number': order_number,
@@ -456,7 +484,9 @@ def extract_data_production_orders_report(orders_data: dict,
                     'responsible': responsible,
                     'comment': comment,
                     }
-            if child_orders_temp.get(composite_key_parent) and orders_data.get(child_orders_temp[composite_key_parent]) and not orders_data[child_orders_temp[composite_key_parent]]['child_orders'].get('report description of production orders'):
+            if child_orders_temp.get(composite_key_parent) \
+                and orders_data.get(child_orders_temp[composite_key_parent]) \
+                    and not orders_data[child_orders_temp[composite_key_parent]]['child_orders'].get('report description of production orders'):
                 child_orders_temp[composite_key] = composite_key_parent
                 orders_data[child_orders_temp[composite_key_parent]]['child_orders']['report description of production orders'] = {
                     composite_key: {
@@ -563,14 +593,17 @@ def determine_if_there_is_a_painting(orders_report: object,
                 }
     return product_is_painted
 
-def calculate_percentage_of_painting_readiness(painted_status: str,
-                                               cutting_shop_for_painting: int,
-                                               paint_shop_for_assembly: int) -> float:
+
+def calculate_percentage_of_painting_readiness(
+        painted_status: str,
+        cutting_shop_for_painting: int,
+        paint_shop_for_assembly: int) -> float:
     """Функция расчета процента готовности покраски
 
     Args:
         painted_status (str): [Статус изделия: к (крашеное)]
-        cutting_shop_for_painting (int): [Выпуск комплектов раскрой на покраску]
+        cutting_shop_for_painting (int): [Выпуск комплектов раскрой
+                                          на покраску]
         paint_shop_for_assembly (int): [Выпуск комплектов покраска]
 
     Returns:
@@ -581,9 +614,26 @@ def calculate_percentage_of_painting_readiness(painted_status: str,
         percentage_of_painting = paint_shop_for_assembly / cutting_shop_for_painting
     return percentage_of_painting
 
-def calculation_number_details_fact_paint_to_assembly(percentage_of_readiness_painting: float,
-                                                      number_of_details_plan_cut_to_paint: int,
-                                                      ) -> int:
+
+def calculation_number_details_fact_paint_to_assembly(
+        percentage_of_readiness_painting: float,
+        number_of_details_plan_cut_to_paint: int) -> int:
+    """Расчет количества деталей покраски на буфер.
+
+    Это не фактические данные учета, а расчетные.
+
+    Расчет ведется из учета деталей переданных на участок покраски
+    цехом раскрой и количеством переданных комплектов покраски на буфер.
+
+    Args:
+        percentage_of_readiness_painting (float): [Процент готовности покраски]
+        number_of_details_plan_cut_to_paint (int): [Количество деталей (план)
+                                                    переданных участком раскроя
+                                                    на покраску]
+
+    Returns:
+        int: [Количество деталей выпущенных цехом покраски на буфер]
+    """
     number_of_details = ""
     if percentage_of_readiness_painting:
         number_of_details = int(percentage_of_readiness_painting * number_of_details_plan_cut_to_paint)

@@ -43,26 +43,30 @@ if __name__ == '__main__':
     print(f"Время на открытие файла: {total_time} с")
 
     # Собираем данные по перемещению комплектов мебели
-    orders_data = extract_data_to_report_moving_sets_of_furnuture(orders_data=orders_data,
-                                                                  workbook=workbook,
-                                                                  sheet=config.sheet_moving_1C,
-                                                                  expression=config.expression)
+    orders_data = extract_data_to_report_moving_sets_of_furnuture(
+        orders_data=orders_data,
+        workbook=workbook,
+        sheet=config.sheet_moving_1C,
+        expression=config.expression)
 
     # Собираем данные по выпуску комплектов мебели
-    orders_data = extract_data_to_report_release_of_assembly_kits(orders_data=orders_data,
-                                                                  workbook=workbook,
-                                                                  sheet=config.sheet_kits_1C,
-                                                                  expression=config.expression)
+    orders_data = extract_data_to_report_release_of_assembly_kits(
+        orders_data=orders_data,
+        workbook=workbook,
+        sheet=config.sheet_kits_1C,
+        expression=config.expression)
 
     # Собираем данные по проценту готовности заказов
-    orders_data = extract_data_to_report_monitor_for_work_centers(orders_data=orders_data,
-                                                                  workbook=workbook,
-                                                                  sheet=config.sheet_percentage_1C)
+    orders_data = extract_data_to_report_monitor_for_work_centers(
+        orders_data=orders_data,
+        workbook=workbook,
+        sheet=config.sheet_percentage_1C)
 
     # Собираем основной и дополнительные заказы с их описанием
-    orders_data = extract_data_to_report_production_orders_report(orders_data=orders_data,
-                                                                  workbook=workbook,
-                                                                  sheet=config.sheet_division_1C)
+    orders_data = extract_data_to_report_production_orders_report(
+        orders_data=orders_data,
+        workbook=workbook,
+        sheet=config.sheet_division_1C)
 
     # Создаем таблицы в БД
     engine = create_engine('sqlite:///data/orders_row_data.db')
@@ -70,8 +74,9 @@ if __name__ == '__main__':
     Base.metadata.create_all(engine)
     session = Session(bind=engine)
 
-    session = import_data_to_db_main_orders(orders_data=orders_data,
-                                            session=session)
+    session = import_data_to_db_main_orders(
+        orders_data=orders_data,
+        session=session)
 
     start = datetime.now()
     session.commit()

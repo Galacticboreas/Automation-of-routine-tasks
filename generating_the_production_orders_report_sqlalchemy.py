@@ -1,31 +1,35 @@
-"""Скрипт генерирует отчет о состоянии заказов на производство на текущую дату.
+"""Скрипт генерирует отчет о состоянии заказов на производство на
+текущую дату.
 
 Источником данных является БД в которую предварительно импортируют
 исходные данные из 1С Производство.
 
-Отчет является вспомогательным источником данных для краткосрочного
-планирования потребности к запуску заказов на производство.
+Отчет является вспомогательным источником данных для монитора заказов
+на производство предназначенным для краткосрочного планирования потребности
+к запуску заказов на производство.
 
-Определяет готовность к сборке изделий и формирует задание на сбору.
+Определяет готовность к сборке изделий и формирует задание на участок
+сборки изделий.
 
 Определяет возможность к запуску заказов в производство на основании
 приоритета и технической готовности к запуску в цех раскрой и формирует
-задание на раскрой.
+задание в цех раскрой.
 """
 
 from datetime import datetime
-from tqdm import tqdm
 
 from openpyxl import Workbook
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
+from tqdm import tqdm
 
 from app import (ORDERS_REPORT_COLUMNS_NAME, ORDERS_REPORT_MAIN_SHEET, Base,
                  DescriptionMainOrderRowData, MonitorForWorkCenters,
                  OrderRowData, ReleaseOfAssemblyKitsRowData,
                  ReportSettingsOrders, SubOrder, SubOrderReportDescription,
                  calculate_percentage_of_painting_readiness,
-                 determine_if_there_is_a_painting, percentage_of_assembly, calculation_number_details_fact_paint_to_assembly)
+                 calculation_number_details_fact_paint_to_assembly,
+                 determine_if_there_is_a_painting, percentage_of_assembly)
 
 # Обращаемся к БД Исходные данные по заказам на производство
 start_all = datetime.now()
@@ -171,6 +175,7 @@ for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирова�
         paint_shop_for_assembly=paint_shop_for_assembly,
     )
 
+    # Описание подчиненных заказов (раскрой на буфер, раскрой на покраску и покраска на буфер)
     description_sub = db.query(SubOrderReportDescription).filter(SubOrderReportDescription.order_id == order.id)
     order_division_paint = ""
     composite_key_paint = ""
@@ -180,8 +185,12 @@ for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирова�
             if d_sub.order_division == "Цех покраски":
                 order_division_paint = d_sub.order_division
                 composite_key_paint = d_sub.composite_key
-                number_of_details_fact_paint_to_assembly = calculation_number_details_fact_paint_to_assembly(percentage_of_readiness_painting=percentage_of_readiness_painting,
-                                                                                                  number_of_details_plan_cut_to_paint=number_of_details_plan_cut_to_paint)
+                # Расчет количества деталей покраски на буфер (расчетный показатель)
+                number_of_details_fact_paint_to_assembly = calculation_number_details_fact_paint_to_assembly(
+                    percentage_of_readiness_painting=percentage_of_readiness_painting,
+                    number_of_details_plan_cut_to_paint=number_of_details_plan_cut_to_paint
+                    )
+
     # Итоговые данные отчета
     data = [
         furniture_article,
@@ -230,6 +239,8 @@ for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирова�
 start = datetime.now()
 print('Сохранение отчета в файл Excel')
 # Сохранить данные в файл Excel
+worksheet = workbook[ORDERS_REPORT_MAIN_SHEET]
+worksheet.insert_rows(2, 2)
 workbook.save(filename=config.path_dir + config.path_data + config.report_file_name + " от " + dt + config.not_macros)
 end = datetime.now()
 total_time = (end - start).total_seconds()
