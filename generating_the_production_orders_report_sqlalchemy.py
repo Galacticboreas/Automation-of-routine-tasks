@@ -1,3 +1,17 @@
+"""Скрипт генерирует отчет о состоянии заказов на производство на текущую дату.
+
+Источником данных является БД в которую предварительно импортируют
+исходные данные из 1С Производство.
+
+Отчет является вспомогательным источником данных для краткосрочного
+планирования потребности к запуску заказов на производство.
+
+Определяет готовность к сборке изделий и формирует задание на сбору.
+
+Определяет возможность к запуску заказов в производство на основании
+приоритета и технической готовности к запуску в цех раскрой.
+"""
+
 from datetime import datetime
 
 from openpyxl import Workbook
@@ -8,7 +22,8 @@ from app import (ORDERS_REPORT_COLUMNS_NAME, ORDERS_REPORT_MAIN_SHEET, Base,
                  DescriptionMainOrderRowData, MonitorForWorkCenters,
                  OrderRowData, ReleaseOfAssemblyKitsRowData,
                  ReportSettingsOrders, SubOrder, SubOrderReportDescription,
-                 determine_if_there_is_a_painting, percentage_of_assembly, calculate_percentage_of_painting_readiness)
+                 calculate_percentage_of_painting_readiness,
+                 determine_if_there_is_a_painting, percentage_of_assembly)
 
 # Обращаемся к БД Исходные данные по заказам на производство
 try:
@@ -127,7 +142,7 @@ for order in orders_report:
                 number_of_details_plan_cut_to_paint = m_sub.number_of_details_plan
                 number_of_details_fact_cut_to_paint = m_sub.number_of_details_fact
                 type_of_movement_cut_to_paint = m_sub.type_of_movement
-    
+
     # Статус изделия: (крашеное/не крашеное) (есть корпус/нет корпуса)
     painted_status = "не определено"
     cutting_status = "не определено"
@@ -135,6 +150,7 @@ for order in orders_report:
         painted_status = product_is_painted[furniture_article]['painted_status']
         cutting_status = product_is_painted[furniture_article]['cutting_status']
 
+    # Расчет процента готовности покраски
     percentage_of_readiness_painting = calculate_percentage_of_painting_readiness(
         painted_status=painted_status,
         cutting_shop_for_painting=cutting_shop_for_painting,
