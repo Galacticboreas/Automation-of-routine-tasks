@@ -562,3 +562,21 @@ def determine_if_there_is_a_painting(orders_report: object,
                     'cutting_status': cutting_status,
                 }
     return product_is_painted
+
+def calculate_percentage_of_painting_readiness(painted_status: str,
+                                               cutting_shop_for_painting: int,
+                                               paint_shop_for_assembly: int) -> float:
+    """Функция расчета процента готовности покраски
+
+    Args:
+        painted_status (str): [Статус изделия: к (крашеное)]
+        cutting_shop_for_painting (int): [Выпуск комплектов раскрой на покраску]
+        paint_shop_for_assembly (int): [Выпуск комплектов покраска]
+
+    Returns:
+        float: [Процент готовности покраски]
+    """
+    percentage_of_painting = ""
+    if painted_status == "к" and cutting_shop_for_painting:
+        percentage_of_painting = paint_shop_for_assembly / cutting_shop_for_painting
+    return percentage_of_painting
