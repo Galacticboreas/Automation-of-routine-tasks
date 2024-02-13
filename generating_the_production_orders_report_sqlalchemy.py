@@ -19,6 +19,7 @@
 from datetime import datetime
 
 from openpyxl import Workbook
+from openpyxl.utils import FORMULAE, formulas
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from tqdm import tqdm
@@ -241,6 +242,11 @@ print('Сохранение отчета в файл Excel')
 # Сохранить данные в файл Excel
 worksheet = workbook[ORDERS_REPORT_MAIN_SHEET]
 worksheet.insert_rows(2, 2)
+last_row = db.query(OrderRowData.id).count() + 3
+worksheet["G2"] = f"=SUBTOTAL(9,G4:G{last_row})"
+worksheet["H2"] = f"=SUBTOTAL(9,H4:H{last_row})"
+worksheet.auto_filter.ref = "A3:AM3"
+worksheet.freeze_panes = "G4"
 workbook.save(filename=config.path_dir + config.path_data + config.report_file_name + " от " + dt + config.not_macros)
 end = datetime.now()
 total_time = (end - start).total_seconds()
