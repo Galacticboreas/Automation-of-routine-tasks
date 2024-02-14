@@ -212,13 +212,13 @@ for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирова�
         percentg_of_assembly,
         percentage_of_readiness_to_cut,
         percentage_of_readiness_painting,
+        comment,
         number_of_details_plan,
         number_of_details_fact,
         order_division,
         order_launch_date,
         order_execution_date,
         responsible,
-        comment,
         type_of_movement_cut_to_assembly,
         composite_key_cut_to_assembly,
         percentage_of_readiness_to_cut_to_assembly,
@@ -246,7 +246,7 @@ last_row = db.query(OrderRowData.id).count() + 3
 worksheet["G2"] = f"=SUBTOTAL(9,G4:G{last_row})"
 worksheet["H2"] = f"=SUBTOTAL(9,H4:H{last_row})"
 worksheet.auto_filter.ref = "A3:AM3"
-worksheet.freeze_panes = "G4"
+worksheet.freeze_panes = "A4"
 workbook.save(filename=config.path_dir + config.path_data + config.report_file_name + " от " + dt + config.not_macros)
 end = datetime.now()
 total_time = (end - start).total_seconds()

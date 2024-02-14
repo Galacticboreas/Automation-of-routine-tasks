@@ -18,11 +18,13 @@ class ReportSettingsOrders:
     macros: str = config['File.extension']['macros']
     not_macros: str = config['File.extension']['not_macros']
     expression: str = config['Expressions']['Production_order']
+    contractors_name: list = field(default_factory=list)
 
     source_file: str = field(init=False)
     report_file: str = field(init=False)
 
     def __post_init__(self):
+        self.contractors_name = self.config['Contractors']['ContractorsName']
         self.source_file = "".join(
             [
                self.path_dir,
