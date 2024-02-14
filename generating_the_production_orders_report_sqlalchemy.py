@@ -85,6 +85,7 @@ for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирова�
     order_execution_date = ""
     responsible = ""
     comment = ""
+    contractor = order.furniture_contractor
 
     # Описание основного заказа
     description_main = db.query(DescriptionMainOrderRowData).filter(DescriptionMainOrderRowData.order_id == order.id)
@@ -213,6 +214,7 @@ for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирова�
         percentage_of_readiness_to_cut,
         percentage_of_readiness_painting,
         comment,
+        contractor,
         number_of_details_plan,
         number_of_details_fact,
         order_division,

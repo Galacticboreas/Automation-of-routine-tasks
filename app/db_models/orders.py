@@ -63,6 +63,7 @@ class ReportMainOrder(Report):
     full_order_number: str = None
     furniture_name: str = ""
     furniture_article: str = ""
+    furniture_contractor: str = ""
     report_moving_sets_of_furniture: object = None
     report_release_of_assembly_kits: object = None
     report_monitor_for_work_center: object = None
@@ -108,6 +109,7 @@ class OrderRowData(Base):
     full_order_number = Column(String(), nullable=False)
     furniture_name = Column(String())
     furniture_article = Column(String())
+    furniture_contractor = Column(String(), default="")
     ordered = Column(Integer(), default=0)
     released = Column(Integer(), default=0)
     remains_to_release = Column(Integer(), default=0)
@@ -204,6 +206,7 @@ def import_data_to_db_main_orders(orders_data: dict, session: object) -> object:
         order_main.full_order_number = orders_data[key].full_order_number
         order_main.furniture_name = orders_data[key].furniture_name
         order_main.furniture_article = orders_data[key].furniture_article
+        order_main.furniture_contractor = orders_data[key].furniture_contractor
         order_main.ordered = orders_data[key].report_moving_sets_of_furniture.ordered
         order_main.released = orders_data[key].report_moving_sets_of_furniture.released
         order_main.remains_to_release = orders_data[key].report_moving_sets_of_furniture.remains_to_release

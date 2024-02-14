@@ -10,6 +10,7 @@ from app.db_models.orders import (Report, ReportDescriptionOfProductionOrder,
 
 def extract_data_to_report_moving_sets_of_furnuture(orders_data: dict,
                                                     workbook: object,
+                                                    contractors: dict,
                                                     sheet: str,
                                                     expression: str,) -> dict:
     workbook_sheet = workbook[sheet]
@@ -19,6 +20,8 @@ def extract_data_to_report_moving_sets_of_furnuture(orders_data: dict,
         full_order_number = value[0]
         composite_key = full_order_number[43:47] + full_order_number[28:33]
         furniture_name = value[1]
+        furniture_article = Report.extractor.get_article(furniture_name)
+        furniture_contractor = contractors[furniture_article] if contractors.get(furniture_article) else ""
         ordered = value[2]
         released = value[3]
         remains_to_release = value[4]
@@ -27,7 +30,8 @@ def extract_data_to_report_moving_sets_of_furnuture(orders_data: dict,
             order_main = ReportMainOrder()
             order_main.full_order_number = full_order_number
             order_main.furniture_name = furniture_name
-            order_main.furniture_article = Report.extractor.get_article(furniture_name)
+            order_main.furniture_article = furniture_article
+            order_main.furniture_contractor = furniture_contractor
             # Заполняем отчет перемещение комплектов мебели
             report_moving = ReportMovingSetsOfFurniture()
             report_moving.ordered = ordered
@@ -638,3 +642,14 @@ def calculation_number_details_fact_paint_to_assembly(
     if percentage_of_readiness_painting:
         number_of_details = int(percentage_of_readiness_painting * number_of_details_plan_cut_to_paint)
     return number_of_details
+
+
+def extract_data_contractors(contractors: dict,
+                             workbook: object,
+                             config: object) -> dict:
+    for value in tqdm(workbook.iter_rows(min_row=2, max_col=2), ncols=80, ascii=True, desc="'Извлекаем данные по контагентам"):
+        key = value[0].value
+        contractor = value[1].value
+        if not contractors.get(key):
+            contractors[key] = contractor
+    return contractors

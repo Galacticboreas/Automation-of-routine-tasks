@@ -22,7 +22,7 @@ from app import (ArticleExtractor, Base, ReportSettingsOrders,
                  extract_data_to_report_moving_sets_of_furnuture,
                  extract_data_to_report_production_orders_report,
                  extract_data_to_report_release_of_assembly_kits,
-                 import_data_to_db_main_orders)
+                 import_data_to_db_main_orders, extract_data_contractors)
 
 config = ReportSettingsOrders()
 extractor = ArticleExtractor()
@@ -30,6 +30,16 @@ orders_data = dict()
 error_log = dict()
 
 if __name__ == '__main__':
+    # Собираем данные о контрагентах
+    path_to_file = config.path_dir + config.path_data + config.file_name_orders2 + config.macros
+    wb = load_workbook(path_to_file, read_only=True, keep_vba=True, data_only=True, keep_links=False)
+    sheet_name = config.sheet_contractors
+    workbook = wb[sheet_name]
+    contractors = dict()
+    contractors = extract_data_contractors(contractors=contractors,
+                                        workbook=workbook,
+                                        config=config)
+
     # Открыть файл с исходными данными
     print("Открываем файл с исходными данными")
     start = datetime.now()
@@ -45,6 +55,7 @@ if __name__ == '__main__':
     # Собираем данные по перемещению комплектов мебели
     orders_data = extract_data_to_report_moving_sets_of_furnuture(
         orders_data=orders_data,
+        contractors=contractors,
         workbook=workbook,
         sheet=config.sheet_moving_1C,
         expression=config.expression)
