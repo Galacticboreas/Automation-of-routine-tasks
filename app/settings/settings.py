@@ -7,6 +7,7 @@ class ReportSettingsOrders:
     config = configparser.ConfigParser()
     config.read('settings.ini', encoding='utf8')
     path_dir: str = config['PATH.DIR']['Path_dir']
+    path_dir_local: str = config['PATH.DIR']['Path_dir_local']
     path_data: str = config["PATH.DIR"]['Path_data']
     source_file_name: str = config["File.name"]['File_name_source']
     report_file_name: str = config['File.name']['File_name_report']
@@ -28,7 +29,6 @@ class ReportSettingsOrders:
         self.source_file = "".join(
             [
                self.path_dir,
-               self.path_data,
                self.source_file_name,
                self.not_macros,
             ]
@@ -36,7 +36,6 @@ class ReportSettingsOrders:
         self.report_file = "".join(
             [
                self.path_dir,
-               self.path_data,
                self.report_file_name,
                self.macros,
             ]

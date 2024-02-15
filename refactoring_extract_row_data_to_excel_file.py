@@ -11,18 +11,18 @@
 """
 
 from datetime import datetime
-from pprint import pprint
 
 from openpyxl import load_workbook
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from app import (ArticleExtractor, Base, ReportSettingsOrders,
+                 extract_data_contractors,
                  extract_data_to_report_monitor_for_work_centers,
                  extract_data_to_report_moving_sets_of_furnuture,
                  extract_data_to_report_production_orders_report,
                  extract_data_to_report_release_of_assembly_kits,
-                 import_data_to_db_main_orders, extract_data_contractors)
+                 import_data_to_db_main_orders)
 
 config = ReportSettingsOrders()
 extractor = ArticleExtractor()
@@ -31,14 +31,16 @@ error_log = dict()
 
 if __name__ == '__main__':
     # Собираем данные о контрагентах
-    path_to_file = config.path_dir + config.path_data + config.file_name_orders2 + config.macros
+    path_to_file = config.path_dir_local + config.path_data + config.file_name_orders2 + config.macros
     wb = load_workbook(path_to_file, read_only=True, keep_vba=True, data_only=True, keep_links=False)
     sheet_name = config.sheet_contractors
     workbook = wb[sheet_name]
     contractors = dict()
-    contractors = extract_data_contractors(contractors=contractors,
-                                        workbook=workbook,
-                                        config=config)
+    contractors = extract_data_contractors(
+        contractors=contractors,
+        workbook=workbook,
+        config=config
+        )
 
     # Открыть файл с исходными данными
     print("Открываем файл с исходными данными")

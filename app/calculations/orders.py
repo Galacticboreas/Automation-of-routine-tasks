@@ -647,6 +647,17 @@ def calculation_number_details_fact_paint_to_assembly(
 def extract_data_contractors(contractors: dict,
                              workbook: object,
                              config: object) -> dict:
+    """Функция извлекает данные из файла Excel
+    какое изделие изготавливается для какого контрагента
+
+    Args:
+        contractors (dict): [Контрагенты]
+        workbook (object): [Файл Excel с данными по контрагентам]
+        config (object): [Класс с конфигами]
+
+    Returns:
+        dict: [key: артикул, item: контрагент]
+    """
     for value in tqdm(workbook.iter_rows(min_row=2, max_col=2), ncols=80, ascii=True, desc="'Извлекаем данные по контагентам"):
         key = value[0].value
         contractor = value[1].value
