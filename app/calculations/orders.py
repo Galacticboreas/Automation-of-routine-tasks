@@ -664,3 +664,27 @@ def extract_data_contractors(contractors: dict,
         if not contractors.get(key):
             contractors[key] = contractor
     return contractors
+
+def set_formula_to_cell(formula: str,
+                        formula_param: list,
+                        worksheet: object,
+                        names_report_colls: dict,
+                        columns_with_formula: list,
+                        converter: object) -> str:
+    """_summary_
+
+    Args:
+        formula (str): _description_
+        formula_param (list): _description_
+        worksheet (object): _description_
+        names_report_colls (list): _description_
+        columns_with_formula (list): _description_
+        converter (object): _description_
+
+    Returns:
+        str: _description_
+    """
+    for key in names_report_colls:
+        column_letter = converter.get_column_letter(names_report_colls[key])
+        set_formula_to_cell = f"={formula}({formula_param[0]},{column_letter})"
+    return set_formula_to_cell

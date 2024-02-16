@@ -43,3 +43,13 @@ ORDERS_REPORT_COLUMNS_NAME = [
 ]
 
 ORDERS_REPORT_MAIN_SHEET = "Основной"
+
+COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL = [
+    "Заказано",
+    "Выпущено",
+    "Осталось выпустить",
+    "Раскрой на буфер",
+    "Раскрой на покраску",
+    "Покраска на буфер",
+    "Выпущено сборка, данные мастеров",
+]
