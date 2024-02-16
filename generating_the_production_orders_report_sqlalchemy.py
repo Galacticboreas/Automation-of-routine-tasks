@@ -19,6 +19,8 @@
 from datetime import datetime
 
 from openpyxl import Workbook
+from openpyxl.utils import get_column_letter, column_index_from_string
+from pprint import pprint
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from tqdm import tqdm
@@ -63,14 +65,19 @@ sheet = workbook.active
 sheet.title = ORDERS_REPORT_MAIN_SHEET
 sheet.append(ORDERS_REPORT_COLUMNS_NAME)
 
-product_is_painted = dict()
 # Определить статус изделия: крашеное/не крашеное и наличие корпуса
+product_is_painted = dict()
 product_is_painted = determine_if_there_is_a_painting(
     orders_report=orders_report,
     product_is_painted=product_is_painted,
     session_db=db,
     table_in_db=SubOrderReportDescription   # Подчиненные заказы
 )
+
+# Запомнить номера колонок
+colums_number = dict()
+for number, name in enumerate(ORDERS_REPORT_COLUMNS_NAME, 1):
+    colums_number[name] = number
 
 # Записываем данные в файл отчета Excel
 for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирование отчета"):
@@ -241,13 +248,44 @@ for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирова�
 start = datetime.now()
 print('Сохранение отчета в файл Excel')
 # Сохранить данные в файл Excel
+
+# Обращаеся к основному листу
 worksheet = workbook[ORDERS_REPORT_MAIN_SHEET]
+
+# Вставка строки
 worksheet.insert_rows(2, 2)
+
+# Вставка формул
+start_row = 4
 last_row = db.query(OrderRowData.id).count() + 3
-worksheet["G2"] = f"=SUBTOTAL(9,G4:G{last_row})"
-worksheet["H2"] = f"=SUBTOTAL(9,H4:H{last_row})"
-worksheet.auto_filter.ref = "A3:AM3"
-worksheet.freeze_panes = "A4"
+column_letter = get_column_letter(colums_number["Заказано"])
+worksheet.cell(row=2, column=colums_number['Заказано']).value = \
+    f"=SUBTOTAL(9,{column_letter}{start_row}:{column_letter}{last_row})"
+column_letter = get_column_letter(colums_number["Выпущено"])
+worksheet.cell(row=2, column=colums_number['Выпущено']).value = \
+    f"=SUBTOTAL(9,{column_letter}{start_row}:{column_letter}{last_row})"
+column_letter = get_column_letter(colums_number["Осталось выпустить"])
+worksheet.cell(row=2, column=colums_number['Осталось выпустить']).value = \
+    f"=SUBTOTAL(9,{column_letter}{start_row}:{column_letter}{last_row})"
+column_letter = get_column_letter(colums_number["Раскрой на буфер"])
+worksheet.cell(row=2, column=colums_number['Раскрой на буфер']).value = \
+    f"=SUBTOTAL(9,{column_letter}{start_row}:{column_letter}{last_row})"
+column_letter = get_column_letter(colums_number["Раскрой на покраску"])
+worksheet.cell(row=2, column=colums_number['Раскрой на покраску']).value = \
+    f"=SUBTOTAL(9,{column_letter}{start_row}:{column_letter}{last_row})"
+column_letter = get_column_letter(colums_number["Покраска на буфер"])
+worksheet.cell(row=2, column=colums_number['Покраска на буфер']).value = \
+    f"=SUBTOTAL(9,{column_letter}{start_row}:{column_letter}{last_row})"
+
+# Вставка автофильтра
+last_coll = len(ORDERS_REPORT_COLUMNS_NAME)
+column_last_letter = get_column_letter(last_coll)
+worksheet.auto_filter.ref = f"A3:{column_last_letter}{last_coll}"
+
+# Закрепление строки
+worksheet.freeze_panes = f"A{start_row}"
+
+# Сохранение файла
 workbook.save(filename=config.path_dir + config.report_file_name + " от " + dt + config.not_macros)
 end = datetime.now()
 total_time = (end - start).total_seconds()
