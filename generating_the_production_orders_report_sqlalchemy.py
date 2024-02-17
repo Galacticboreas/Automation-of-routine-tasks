@@ -18,6 +18,7 @@
 
 from datetime import datetime
 from pprint import pprint
+import pandas as pd
 
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle
@@ -289,6 +290,10 @@ print(set_format)
 last_coll = len(ORDERS_REPORT_COLUMNS_NAME)
 column_last_letter = get_column_letter(last_coll)
 worksheet.auto_filter.ref = f"A3:{column_last_letter}{last_coll}"
+
+# Сортировка по возрастанию для колонки Дата (от старых к новым)
+column_letter = get_column_letter(colums_number['Дата'])
+worksheet.auto_filter.add_sort_condition(f"{column_letter}{start_row}:{column_letter}{last_row}", descending=False)
 
 # Закрепление строки
 worksheet.freeze_panes = f"A{start_row}"
