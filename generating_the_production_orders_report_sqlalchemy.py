@@ -1,5 +1,5 @@
 """Скрипт генерирует отчет о состоянии заказов на производство на
-текущую дату.
+текущую дату в файл excel.
 
 Источником данных является БД в которую предварительно импортируют
 исходные данные из 1С Производство.
@@ -17,18 +17,15 @@
 """
 
 from datetime import datetime
-from pprint import pprint
-import pandas as pd
 
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle
-from openpyxl.styles.numbers import FORMAT_PERCENTAGE
-from openpyxl.utils import column_index_from_string, get_column_letter
+from openpyxl.utils import get_column_letter
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from tqdm import tqdm
 
-from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL, COLUMNS_FORMAT,
+from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL, COLUMNS_FORMAT_PERCENTAGE,
                  ORDERS_REPORT_COLUMNS_NAME, ORDERS_REPORT_MAIN_SHEET, Base,
                  DescriptionMainOrderRowData, MonitorForWorkCenters,
                  OrderRowData, ReleaseOfAssemblyKitsRowData,
@@ -36,7 +33,7 @@ from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL, COLUMNS_FORMAT,
                  calculate_percentage_of_painting_readiness,
                  calculation_number_details_fact_paint_to_assembly,
                  determine_if_there_is_a_painting, percentage_of_assembly,
-                 set_format_to_cell, set_formula_to_cell)
+                 set_format_to_cell, set_formula_to_cell, set_weigth_to_cell, COLUMNS_WIDTH)
 
 # Обращаемся к БД Исходные данные по заказам на производство
 start_all = datetime.now()
@@ -63,9 +60,6 @@ print(f'Выполнен за : {total_time} c.')
 workbook = Workbook()
 config = ReportSettingsOrders()
 
-dt = datetime.now()
-dt = dt.strftime("%d.%m.%Y %Hч%Mм")
-
 sheet = workbook.active
 sheet.title = ORDERS_REPORT_MAIN_SHEET
 sheet.append(ORDERS_REPORT_COLUMNS_NAME)
@@ -85,7 +79,10 @@ for number, name in enumerate(ORDERS_REPORT_COLUMNS_NAME, 1):
     colums_number[name] = number
 
 # Записываем данные в файл отчета Excel
-for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирование отчета"):
+for order in tqdm(orders_report,
+                  ncols=80,
+                  ascii=True,
+                  desc="Формирование отчета"):
     furniture_article = order.furniture_article
     ordered = order.ordered
     released = order.released
@@ -99,7 +96,8 @@ for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирова�
     contractor = order.furniture_contractor
 
     # Описание основного заказа
-    description_main = db.query(DescriptionMainOrderRowData).filter(DescriptionMainOrderRowData.order_id == order.id)
+    description_main = \
+        db.query(DescriptionMainOrderRowData).filter(DescriptionMainOrderRowData.order_id == order.id)
     if description_main:
         for d in description_main:
             order_date = d.order_date
@@ -115,7 +113,8 @@ for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирова�
     assembly_shop = 0
 
     # Выпуск комплектов мебели (отчет матсеров)
-    release_of_assembly = db.query(ReleaseOfAssemblyKitsRowData).filter(ReleaseOfAssemblyKitsRowData.order_id == order.id)
+    release_of_assembly = \
+        db.query(ReleaseOfAssemblyKitsRowData).filter(ReleaseOfAssemblyKitsRowData.order_id == order.id)
     if release_of_assembly:
         for r in release_of_assembly:
             cutting_shop_for_assembly = r.cutting_shop_for_assembly
@@ -131,12 +130,13 @@ for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирова�
     )
 
     # Данные монитора рабочих центров для основного заказа
-    percentage_of_readiness_to_cut = ""
+    percentage_of_readiness_to_cut = "не развернут"
     number_of_details_plan = 0
     number_of_details_fact = 0
 
     # Монитор рабочих центров (основной заказ) (готовность раскрой на буфер и раскрой на покраску)
-    monitor = db.query(MonitorForWorkCenters).filter(MonitorForWorkCenters.order_id == order.id)
+    monitor = \
+        db.query(MonitorForWorkCenters).filter(MonitorForWorkCenters.order_id == order.id)
     if monitor:
         for m in monitor:
             percentage_of_readiness_to_cut = m.percentage_of_readiness_to_cut
@@ -189,7 +189,8 @@ for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирова�
     )
 
     # Описание подчиненных заказов (раскрой на буфер, раскрой на покраску и покраска на буфер)
-    description_sub = db.query(SubOrderReportDescription).filter(SubOrderReportDescription.order_id == order.id)
+    description_sub = \
+        db.query(SubOrderReportDescription).filter(SubOrderReportDescription.order_id == order.id)
     order_division_paint = ""
     composite_key_paint = ""
     number_of_details_fact_paint_to_assembly = ""
@@ -199,10 +200,11 @@ for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирова�
                 order_division_paint = d_sub.order_division
                 composite_key_paint = d_sub.composite_key
                 # Расчет количества деталей покраски на буфер (расчетный показатель)
-                number_of_details_fact_paint_to_assembly = calculation_number_details_fact_paint_to_assembly(
-                    percentage_of_readiness_painting=percentage_of_readiness_painting,
-                    number_of_details_plan_cut_to_paint=number_of_details_plan_cut_to_paint
-                    )
+                number_of_details_fact_paint_to_assembly = \
+                    calculation_number_details_fact_paint_to_assembly(
+                        percentage_of_readiness_painting=percentage_of_readiness_painting,
+                        number_of_details_plan_cut_to_paint=number_of_details_plan_cut_to_paint
+                        )
 
     # Итоговые данные отчета
     data = [
@@ -281,7 +283,7 @@ set_format = set_format_to_cell(
     start_row=start_row,
     last_row=last_row,
     columns_number=colums_number,
-    columns_with_format=COLUMNS_FORMAT,
+    columns_with_format=COLUMNS_FORMAT_PERCENTAGE,
     converter_letter=get_column_letter,
 )
 print(set_format)
@@ -293,12 +295,28 @@ worksheet.auto_filter.ref = f"A3:{column_last_letter}{last_coll}"
 
 # Сортировка по возрастанию для колонки Дата (от старых к новым)
 column_letter = get_column_letter(colums_number['Дата'])
-worksheet.auto_filter.add_sort_condition(f"{column_letter}{start_row}:{column_letter}{last_row}", descending=False)
+worksheet.auto_filter.add_sort_condition(
+    f"{column_letter}{start_row}:{column_letter}{last_row}",
+    descending=False
+    )
 
 # Закрепление строки
 worksheet.freeze_panes = f"A{start_row}"
 
+# Стили
+# column_letter = get_column_letter(colums_number['Наименование'])
+# worksheet.column_dimensions[f'{column_letter}'].width = 50
+set_weigth = set_weigth_to_cell(
+    worksheet=worksheet,
+    columns_number=colums_number,
+    columns_with_format=COLUMNS_WIDTH,
+    converter_letter=get_column_letter
+)
+print(set_weigth)
+
 # Сохранение файла
+dt = datetime.now()
+dt = dt.strftime("%d.%m.%Y %Hч%Mм")
 start = datetime.now()
 print('Сохранение отчета в файл Excel')
 workbook.save(filename=config.path_dir + config.report_file_name + " от " + dt + config.not_macros)

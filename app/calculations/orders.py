@@ -715,3 +715,13 @@ def set_format_to_cell(format_cell: str,
         for cell in worksheet[f"{column_letter}{start_row}:{column_letter}{last_row}"]:
             cell[0].number_format = format_cell
     return f'Формат {format_cell} задан для {len(columns_with_format)} колонок.'
+
+def set_weigth_to_cell(worksheet,
+                       columns_number: dict,
+                       columns_with_format: dict,
+                       converter_letter: object) -> str:
+    for key in columns_with_format:
+        column_letter = converter_letter(columns_number[key])
+        worksheet.column_dimensions[f'{column_letter}'].width = columns_with_format[key]
+    return f'Задана ширина для {len(columns_with_format)} столбцов.'
+    
