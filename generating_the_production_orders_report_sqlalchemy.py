@@ -17,15 +17,16 @@
 """
 
 from datetime import datetime
+from pprint import pprint
 
 from openpyxl import Workbook
-from openpyxl.utils import get_column_letter, column_index_from_string
-from pprint import pprint
+from openpyxl.utils import column_index_from_string, get_column_letter
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from tqdm import tqdm
 
-from app import (ORDERS_REPORT_COLUMNS_NAME, ORDERS_REPORT_MAIN_SHEET, Base,
+from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL, set_formula_to_cell,
+                 ORDERS_REPORT_COLUMNS_NAME, ORDERS_REPORT_MAIN_SHEET, Base,
                  DescriptionMainOrderRowData, MonitorForWorkCenters,
                  OrderRowData, ReleaseOfAssemblyKitsRowData,
                  ReportSettingsOrders, SubOrder, SubOrderReportDescription,
@@ -258,24 +259,19 @@ worksheet.insert_rows(2, 2)
 # Вставка формул
 start_row = 4
 last_row = db.query(OrderRowData.id).count() + 3
-column_letter = get_column_letter(colums_number["Заказано"])
-worksheet.cell(row=2, column=colums_number['Заказано']).value = \
-    f"=SUBTOTAL(9,{column_letter}{start_row}:{column_letter}{last_row})"
-column_letter = get_column_letter(colums_number["Выпущено"])
-worksheet.cell(row=2, column=colums_number['Выпущено']).value = \
-    f"=SUBTOTAL(9,{column_letter}{start_row}:{column_letter}{last_row})"
-column_letter = get_column_letter(colums_number["Осталось выпустить"])
-worksheet.cell(row=2, column=colums_number['Осталось выпустить']).value = \
-    f"=SUBTOTAL(9,{column_letter}{start_row}:{column_letter}{last_row})"
-column_letter = get_column_letter(colums_number["Раскрой на буфер"])
-worksheet.cell(row=2, column=colums_number['Раскрой на буфер']).value = \
-    f"=SUBTOTAL(9,{column_letter}{start_row}:{column_letter}{last_row})"
-column_letter = get_column_letter(colums_number["Раскрой на покраску"])
-worksheet.cell(row=2, column=colums_number['Раскрой на покраску']).value = \
-    f"=SUBTOTAL(9,{column_letter}{start_row}:{column_letter}{last_row})"
-column_letter = get_column_letter(colums_number["Покраска на буфер"])
-worksheet.cell(row=2, column=colums_number['Покраска на буфер']).value = \
-    f"=SUBTOTAL(9,{column_letter}{start_row}:{column_letter}{last_row})"
+
+set_formula = set_formula_to_cell(
+    formula="SUBTOTAL",
+    formula_param=[9],
+    worksheet=worksheet,
+    row=2,
+    start_row=start_row,
+    last_row=last_row,
+    columns_number=colums_number,
+    columns_with_formula=COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL,
+    converter_letter=get_column_letter,
+)
+print(set_formula)
 
 # Вставка автофильтра
 last_coll = len(ORDERS_REPORT_COLUMNS_NAME)

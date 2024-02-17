@@ -668,23 +668,35 @@ def extract_data_contractors(contractors: dict,
 def set_formula_to_cell(formula: str,
                         formula_param: list,
                         worksheet: object,
-                        names_report_colls: dict,
+                        row: int,
+                        start_row: int,
+                        last_row: int,
+                        columns_number: dict,
                         columns_with_formula: list,
-                        converter: object) -> str:
-    """_summary_
+                        converter_letter: object) -> str:
+    """Функция вставляет в строке формулу в столбцах перечисленных
+    в списке
 
     Args:
-        formula (str): _description_
-        formula_param (list): _description_
-        worksheet (object): _description_
-        names_report_colls (list): _description_
-        columns_with_formula (list): _description_
-        converter (object): _description_
+        formula (str): [Наименование формулы: прим.: SUBTOTAL]
+        formula_param (list): [Параметры формулы: [9] или [9, 3, ... 5]]
+        worksheet (object): [Рабочий лист файла excel]
+        row (int): [Строка в которую необходимо втавить формулу]
+        start_row (int): [Стартовая строка для вычислений формулы]
+        last_row (int): [Последняя строка для вычислений формулы]
+        columns_number (dict): [Номер колонки: key= "Имя", item= int]
+        columns_with_formula (list): [Названия колонок куда необходимо
+                                      вставить формулы]
+        converter_letter (object): [Конвертер перевода номера в символ.
+                              Пример: колонка с номером 2, convert = B]
 
     Returns:
-        str: _description_
+        str: [Сообщение: Формула ФОРМУЛА вставлена в (кол-во) ячеек]
     """
-    for key in names_report_colls:
-        column_letter = converter.get_column_letter(names_report_colls[key])
-        set_formula_to_cell = f"={formula}({formula_param[0]},{column_letter})"
-    return set_formula_to_cell
+    for coll_name in tqdm(columns_with_formula,
+                          ncols=80, ascii=True,
+                          desc=f"Вставляем формулу {formula}"):
+        column_letter = converter_letter(columns_number[coll_name])
+        worksheet.cell(row=row, column=columns_number[coll_name]).value = \
+            f"={formula}({formula_param[0]},{column_letter}{start_row}:{column_letter}{last_row})"
+    return f'Формула {formula} вставлена в {len(columns_with_formula)} ячеек.'
