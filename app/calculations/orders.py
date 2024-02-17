@@ -700,3 +700,18 @@ def set_formula_to_cell(formula: str,
         worksheet.cell(row=row, column=columns_number[coll_name]).value = \
             f"={formula}({formula_param[0]},{column_letter}{start_row}:{column_letter}{last_row})"
     return f'Формула {formula} вставлена в {len(columns_with_formula)} ячеек.'
+
+def set_format_to_cell(format_cell: str,
+                       worksheet: object,
+                       start_row: int,
+                       last_row: int,
+                       columns_number: dict,
+                       columns_with_format: list,
+                       converter_letter: object) -> str:
+    for coll_name in tqdm(columns_with_format,
+                          ncols=80, ascii=True,
+                          desc=f"Задаем формат {format_cell} для стобцов"):
+        column_letter = converter_letter(columns_number[coll_name])
+        for cell in worksheet[f"{column_letter}{start_row}:{column_letter}{last_row}"]:
+            cell[0].number_format = format_cell
+    return f'Формат {format_cell} задан для {len(columns_with_format)} колонок.'

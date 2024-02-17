@@ -20,19 +20,22 @@ from datetime import datetime
 from pprint import pprint
 
 from openpyxl import Workbook
+from openpyxl.styles import NamedStyle
+from openpyxl.styles.numbers import FORMAT_PERCENTAGE
 from openpyxl.utils import column_index_from_string, get_column_letter
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from tqdm import tqdm
 
-from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL, set_formula_to_cell,
+from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL, COLUMNS_FORMAT,
                  ORDERS_REPORT_COLUMNS_NAME, ORDERS_REPORT_MAIN_SHEET, Base,
                  DescriptionMainOrderRowData, MonitorForWorkCenters,
                  OrderRowData, ReleaseOfAssemblyKitsRowData,
                  ReportSettingsOrders, SubOrder, SubOrderReportDescription,
                  calculate_percentage_of_painting_readiness,
                  calculation_number_details_fact_paint_to_assembly,
-                 determine_if_there_is_a_painting, percentage_of_assembly)
+                 determine_if_there_is_a_painting, percentage_of_assembly,
+                 set_format_to_cell, set_formula_to_cell)
 
 # Обращаемся к БД Исходные данные по заказам на производство
 start_all = datetime.now()
@@ -246,10 +249,6 @@ for order in tqdm(orders_report, ncols=80, ascii=True, desc="Формирова�
     ]
     sheet.append(data)
 
-start = datetime.now()
-print('Сохранение отчета в файл Excel')
-# Сохранить данные в файл Excel
-
 # Обращаеся к основному листу
 worksheet = workbook[ORDERS_REPORT_MAIN_SHEET]
 
@@ -260,6 +259,7 @@ worksheet.insert_rows(2, 2)
 start_row = 4
 last_row = db.query(OrderRowData.id).count() + 3
 
+# Установить формулу итогов в шапку таблицы
 set_formula = set_formula_to_cell(
     formula="SUBTOTAL",
     formula_param=[9],
@@ -273,6 +273,18 @@ set_formula = set_formula_to_cell(
 )
 print(set_formula)
 
+# Задать формат ячеек для колонок с процентом готовности
+set_format = set_format_to_cell(
+    format_cell="0%",
+    worksheet=worksheet,
+    start_row=start_row,
+    last_row=last_row,
+    columns_number=colums_number,
+    columns_with_format=COLUMNS_FORMAT,
+    converter_letter=get_column_letter,
+)
+print(set_format)
+
 # Вставка автофильтра
 last_coll = len(ORDERS_REPORT_COLUMNS_NAME)
 column_last_letter = get_column_letter(last_coll)
@@ -282,6 +294,8 @@ worksheet.auto_filter.ref = f"A3:{column_last_letter}{last_coll}"
 worksheet.freeze_panes = f"A{start_row}"
 
 # Сохранение файла
+start = datetime.now()
+print('Сохранение отчета в файл Excel')
 workbook.save(filename=config.path_dir + config.report_file_name + " от " + dt + config.not_macros)
 end = datetime.now()
 total_time = (end - start).total_seconds()
