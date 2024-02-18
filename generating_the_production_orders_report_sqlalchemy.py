@@ -19,13 +19,15 @@
 from datetime import datetime
 
 from openpyxl import Workbook
-from openpyxl.styles import NamedStyle
-from openpyxl.utils import get_column_letter
+from openpyxl.styles import (Alignment, Border, Font, GradientFill, NamedStyle,
+                             PatternFill, Side)
+from openpyxl.utils import column_index_from_string, get_column_letter
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from tqdm import tqdm
 
-from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL, COLUMNS_FORMAT_PERCENTAGE,
+from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL,
+                 COLUMNS_FORMAT_PERCENTAGE, COLUMNS_WIDTH,
                  ORDERS_REPORT_COLUMNS_NAME, ORDERS_REPORT_MAIN_SHEET, Base,
                  DescriptionMainOrderRowData, MonitorForWorkCenters,
                  OrderRowData, ReleaseOfAssemblyKitsRowData,
@@ -33,7 +35,7 @@ from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL, COLUMNS_FORMAT_PERCENT
                  calculate_percentage_of_painting_readiness,
                  calculation_number_details_fact_paint_to_assembly,
                  determine_if_there_is_a_painting, percentage_of_assembly,
-                 set_format_to_cell, set_formula_to_cell, set_weigth_to_cell, COLUMNS_WIDTH)
+                 set_format_to_cell, set_formula_to_cell, set_weigth_to_cell)
 
 # Обращаемся к БД Исходные данные по заказам на производство
 start_all = datetime.now()
@@ -304,8 +306,66 @@ worksheet.auto_filter.add_sort_condition(
 worksheet.freeze_panes = f"A{start_row}"
 
 # Стили
-# column_letter = get_column_letter(colums_number['Наименование'])
-# worksheet.column_dimensions[f'{column_letter}'].width = 50
+# Стиль шрифта
+font = Font(
+    name='Calibri',
+    size=8,
+    bold=False,
+    italic=False,
+    vertAlign=None,
+    underline='none',
+    strike=False,
+    color='00000000',
+)
+# Заливка ячеек
+fill = PatternFill(fill_type='solid', fgColor="0099CCFF")
+# Границы ячеек
+border = Border(
+    left=Side(border_style='thin', color='FF000000'),
+    right=Side(border_style='thin', color='FF000000'),
+    top=Side(border_style='thin', color='FF000000'),
+    bottom=Side(border_style='thin', color='FF000000'),
+    diagonal=Side(border_style='thin', color='FF000000'),
+    diagonal_direction=0,
+    outline=Side(border_style='thin', color='FF000000'),
+    vertical=Side(border_style='thin', color='FF000000'),
+    horizontal=Side(border_style='thin', color='FF000000'),
+)
+# Выравнивание в ячейках
+alignment = Alignment(
+    horizontal='center',
+    vertical='center',
+    text_rotation=0,
+    wrap_text=True,
+    shrink_to_fit=False,
+    indent=0,
+)
+# Именованный стиль
+th = NamedStyle(name='table_header')
+th.font = font
+th.fill = fill
+th.border = border
+th.alignment = alignment
+workbook.add_named_style(th)
+# Заливка, выравнивание, границы шапки таблицы
+for i in range(last_coll):
+    column_letter = get_column_letter(i + 1)
+    worksheet[f'{column_letter}1'].style = 'table_header'
+    worksheet[f'{column_letter}2'].style = 'table_header'
+    worksheet[f'{column_letter}3'].fill = PatternFill('solid', fgColor="00FF9900")
+    worksheet[f'{column_letter}3'].border = Border(
+        left=Side(border_style='thin', color='FF000000'),
+        right=Side(border_style='thin', color='FF000000'),
+        top=Side(border_style='thin', color='FF000000'),
+        bottom=Side(border_style='thin', color='FF000000'),
+        diagonal=Side(border_style='thin', color='FF000000'),
+        diagonal_direction=0,
+        outline=Side(border_style='thin', color='FF000000'),
+        vertical=Side(border_style='thin', color='FF000000'),
+        horizontal=Side(border_style='thin', color='FF000000'),
+        )
+
+# Ширина колонок отчета
 set_weigth = set_weigth_to_cell(
     worksheet=worksheet,
     columns_number=colums_number,

@@ -665,6 +665,7 @@ def extract_data_contractors(contractors: dict,
             contractors[key] = contractor
     return contractors
 
+
 def set_formula_to_cell(formula: str,
                         formula_param: list,
                         worksheet: object,
@@ -701,6 +702,7 @@ def set_formula_to_cell(formula: str,
             f"={formula}({formula_param[0]},{column_letter}{start_row}:{column_letter}{last_row})"
     return f'Формула {formula} вставлена в {len(columns_with_formula)} ячеек.'
 
+
 def set_format_to_cell(format_cell: str,
                        worksheet: object,
                        start_row: int,
@@ -716,6 +718,7 @@ def set_format_to_cell(format_cell: str,
             cell[0].number_format = format_cell
     return f'Формат {format_cell} задан для {len(columns_with_format)} колонок.'
 
+
 def set_weigth_to_cell(worksheet,
                        columns_number: dict,
                        columns_with_format: dict,
@@ -724,4 +727,3 @@ def set_weigth_to_cell(worksheet,
         column_letter = converter_letter(columns_number[key])
         worksheet.column_dimensions[f'{column_letter}'].width = columns_with_format[key]
     return f'Задана ширина для {len(columns_with_format)} столбцов.'
-    
