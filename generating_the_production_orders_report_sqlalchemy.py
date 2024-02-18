@@ -19,12 +19,12 @@
 from datetime import datetime
 
 from openpyxl import Workbook
-from openpyxl.styles import (Alignment, Border, Font, GradientFill, NamedStyle,
-                             PatternFill, Side)
+from openpyxl.styles import Border, Font, PatternFill, Side, Alignment
 from openpyxl.utils import column_index_from_string, get_column_letter
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from tqdm import tqdm
+from openpyxl.formatting.rule import ColorScaleRule
 
 from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL,
                  COLUMNS_FORMAT_PERCENTAGE, COLUMNS_WIDTH,
@@ -35,7 +35,8 @@ from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL,
                  calculate_percentage_of_painting_readiness,
                  calculation_number_details_fact_paint_to_assembly,
                  determine_if_there_is_a_painting, percentage_of_assembly,
-                 set_format_to_cell, set_formula_to_cell, set_weigth_to_cell)
+                 set_format_to_cell, set_formula_to_cell, set_weigth_to_cell, set_styles_to_cells)
+from app.styles_for_tables.orders_report import td_digit, td_text, t_head
 
 # Обращаемся к БД Исходные данные по заказам на производство
 start_all = datetime.now()
@@ -276,19 +277,6 @@ set_formula = set_formula_to_cell(
     columns_with_formula=COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL,
     converter_letter=get_column_letter,
 )
-print(set_formula)
-
-# Задать формат ячеек для колонок с процентом готовности
-set_format = set_format_to_cell(
-    format_cell="0%",
-    worksheet=worksheet,
-    start_row=start_row,
-    last_row=last_row,
-    columns_number=colums_number,
-    columns_with_format=COLUMNS_FORMAT_PERCENTAGE,
-    converter_letter=get_column_letter,
-)
-print(set_format)
 
 # Вставка автофильтра
 last_coll = len(ORDERS_REPORT_COLUMNS_NAME)
@@ -305,65 +293,106 @@ worksheet.auto_filter.add_sort_condition(
 # Закрепление строки
 worksheet.freeze_panes = f"A{start_row}"
 
-# Стили
-# Стиль шрифта
-font = Font(
-    name='Calibri',
-    size=8,
-    bold=False,
-    italic=False,
-    vertAlign=None,
-    underline='none',
-    strike=False,
-    color='00000000',
-)
-# Заливка ячеек
-fill = PatternFill(fill_type='solid', fgColor="0099CCFF")
-# Границы ячеек
-border = Border(
-    left=Side(border_style='thin', color='FF000000'),
-    right=Side(border_style='thin', color='FF000000'),
-    top=Side(border_style='thin', color='FF000000'),
-    bottom=Side(border_style='thin', color='FF000000'),
-    diagonal=Side(border_style='thin', color='FF000000'),
-    diagonal_direction=0,
-    outline=Side(border_style='thin', color='FF000000'),
-    vertical=Side(border_style='thin', color='FF000000'),
-    horizontal=Side(border_style='thin', color='FF000000'),
-)
-# Выравнивание в ячейках
-alignment = Alignment(
-    horizontal='center',
-    vertical='center',
-    text_rotation=0,
-    wrap_text=True,
-    shrink_to_fit=False,
-    indent=0,
-)
-# Именованный стиль
-th = NamedStyle(name='table_header')
-th.font = font
-th.fill = fill
-th.border = border
-th.alignment = alignment
-workbook.add_named_style(th)
+# Регистрация стилей
+workbook.add_named_style(t_head)
+workbook.add_named_style(td_digit)
+workbook.add_named_style(td_text)
+
 # Заливка, выравнивание, границы шапки таблицы
 for i in range(last_coll):
     column_letter = get_column_letter(i + 1)
     worksheet[f'{column_letter}1'].style = 'table_header'
     worksheet[f'{column_letter}2'].style = 'table_header'
+    worksheet[f'{column_letter}2'].font = Font(
+        name='Calibri',
+        size=11,
+        bold=True,
+        )
     worksheet[f'{column_letter}3'].fill = PatternFill('solid', fgColor="00FF9900")
     worksheet[f'{column_letter}3'].border = Border(
         left=Side(border_style='thin', color='FF000000'),
         right=Side(border_style='thin', color='FF000000'),
         top=Side(border_style='thin', color='FF000000'),
         bottom=Side(border_style='thin', color='FF000000'),
-        diagonal=Side(border_style='thin', color='FF000000'),
-        diagonal_direction=0,
-        outline=Side(border_style='thin', color='FF000000'),
-        vertical=Side(border_style='thin', color='FF000000'),
-        horizontal=Side(border_style='thin', color='FF000000'),
         )
+
+# Стиль для ячеек
+set_styles = set_styles_to_cells(
+    worksheet=worksheet,
+    start_row=start_row,
+    last_row=last_row,
+    column_name_left='Артикул',
+    column_name_right='Количество деталей факт, покраска на буфер',
+    columns_number=colums_number,
+    converter_letter=get_column_letter,
+    styles='table_data_text',
+)
+
+set_styles = set_styles_to_cells(
+    worksheet=worksheet,
+    start_row=start_row,
+    last_row=last_row,
+    column_name_left='Заказано',
+    column_name_right='Выпущено сборка, данные мастеров',
+    columns_number=colums_number,
+    converter_letter=get_column_letter,
+    styles='table_data_digit',
+)
+
+set_styles = set_styles_to_cells(
+    worksheet=worksheet,
+    start_row=start_row,
+    last_row=last_row,
+    column_name_left='Процент готовности сборка',
+    column_name_right='Процент готовности покраска',
+    columns_number=colums_number,
+    converter_letter=get_column_letter,
+    styles='table_data_digit',
+)
+
+set_styles = set_styles_to_cells(
+    worksheet=worksheet,
+    start_row=start_row,
+    last_row=last_row,
+    column_name_left='Количество деталей план',
+    column_name_right='Количество деталей факт',
+    columns_number=colums_number,
+    converter_letter=get_column_letter,
+    styles='table_data_digit',
+)
+
+set_styles = set_styles_to_cells(
+    worksheet=worksheet,
+    start_row=start_row,
+    last_row=last_row,
+    column_name_left='Процент готовности, раскрой на буфер',
+    column_name_right='Количество деталей факт, раскрой на буфер',
+    columns_number=colums_number,
+    converter_letter=get_column_letter,
+    styles='table_data_digit',
+)
+
+set_styles = set_styles_to_cells(
+    worksheet=worksheet,
+    start_row=start_row,
+    last_row=last_row,
+    column_name_left='Процент готовности, раскрой на покраску',
+    column_name_right='Количество деталей факт, раскрой на покраску',
+    columns_number=colums_number,
+    converter_letter=get_column_letter,
+    styles='table_data_digit',
+)
+
+set_styles = set_styles_to_cells(
+    worksheet=worksheet,
+    start_row=start_row,
+    last_row=last_row,
+    column_name_left='Процент готовности, покраска на буфер',
+    column_name_right='Количество деталей факт, покраска на буфер',
+    columns_number=colums_number,
+    converter_letter=get_column_letter,
+    styles='table_data_digit',
+)
 
 # Ширина колонок отчета
 set_weigth = set_weigth_to_cell(
@@ -372,7 +401,78 @@ set_weigth = set_weigth_to_cell(
     columns_with_format=COLUMNS_WIDTH,
     converter_letter=get_column_letter
 )
-print(set_weigth)
+
+
+for value in worksheet.iter_rows(min_row=start_row, max_col=colums_number['Процент готовности сборка']):
+    percentage = value[colums_number['Процент готовности сборка'] - 1].value
+    if percentage >= 0.9:
+        column_letter_left = get_column_letter(colums_number['Артикул'])
+        column_letter_right = get_column_letter(colums_number['Наличие корпуса'])
+        for cells in worksheet[f'{column_letter_left}{value[colums_number["Артикул"]].row}:{column_letter_right}{value[colums_number["Артикул"]].row}']:
+            for cell in cells:
+                cell.fill = PatternFill('solid', fgColor="00008000")
+    if percentage < 0.9 and percentage > 0.1:
+        column_letter_left = get_column_letter(colums_number['Заказано'])
+        column_letter_right = get_column_letter(colums_number['Осталось выпустить'])
+        for cells in worksheet[f'{column_letter_left}{value[colums_number["Артикул"]].row}:{column_letter_right}{value[colums_number["Артикул"]].row}']:
+            for cell in cells:
+                cell.fill = PatternFill('solid', fgColor="00FFFF00")
+    column_letter_left = get_column_letter(colums_number['Раскрой на буфер'])
+    column_letter_right = get_column_letter(colums_number['Покраска на буфер'])
+    for cells in worksheet[f'{column_letter_left}{value[colums_number["Артикул"]].row}:{column_letter_right}{value[colums_number["Артикул"]].row}']:
+            for cell in cells:
+                value_division = cell.value
+                if value_division:
+                    cell.fill = PatternFill('solid', fgColor="00008000")
+
+# Задать формат ячеек для колонок с процентом готовности
+set_format = set_format_to_cell(
+    format_cell="0%",
+    worksheet=worksheet,
+    start_row=start_row,
+    last_row=last_row,
+    columns_number=colums_number,
+    columns_with_format=COLUMNS_FORMAT_PERCENTAGE,
+    converter_letter=get_column_letter,
+)
+column_letter = get_column_letter(colums_number['Процент готовности сборка'])
+worksheet.conditional_formatting.add(f'{column_letter}{start_row}:{column_letter}{last_row}',
+                                     ColorScaleRule(start_type='percentile',
+                                                    start_value=0,
+                                                    start_color='00FF0000',
+                                                    mid_type='percentile',
+                                                    mid_value=50,
+                                                    mid_color='00FFFF00',
+                                                    end_type='percentile',
+                                                    end_value=100,
+                                                    end_color='00008000')
+                                                    )
+
+column_letter = get_column_letter(colums_number['Процент готовности раскрой'])
+worksheet.conditional_formatting.add(f'{column_letter}{start_row}:{column_letter}{last_row}',
+                                     ColorScaleRule(start_type='percentile',
+                                                    start_value=0,
+                                                    start_color='00FF0000',
+                                                    mid_type='percentile',
+                                                    mid_value=50,
+                                                    mid_color='00FFFF00',
+                                                    end_type='percentile',
+                                                    end_value=100,
+                                                    end_color='00008000')
+                                                    )
+
+column_letter = get_column_letter(colums_number['Процент готовности покраска'])
+worksheet.conditional_formatting.add(f'{column_letter}{start_row}:{column_letter}{last_row}',
+                                     ColorScaleRule(start_type='percentile',
+                                                    start_value=0,
+                                                    start_color='00FF0000',
+                                                    mid_type='percentile',
+                                                    mid_value=50,
+                                                    mid_color='00FFFF00',
+                                                    end_type='percentile',
+                                                    end_value=100,
+                                                    end_color='00008000')
+                                                    )
 
 # Сохранение файла
 dt = datetime.now()

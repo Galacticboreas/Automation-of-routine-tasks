@@ -542,6 +542,8 @@ def percentage_of_assembly(ordered: int,
     """
     assembly = assembly_shop if assembly_shop > released else released
     percentage = assembly / ordered
+    if percentage > 1:
+        percentage = 1
     return percentage
 
 
@@ -674,7 +676,7 @@ def set_formula_to_cell(formula: str,
                         last_row: int,
                         columns_number: dict,
                         columns_with_formula: list,
-                        converter_letter: object) -> str:
+                        converter_letter: object) -> None:
     """Функция вставляет в строке формулу в столбцах перечисленных
     в списке
 
@@ -696,11 +698,10 @@ def set_formula_to_cell(formula: str,
     """
     for coll_name in tqdm(columns_with_formula,
                           ncols=80, ascii=True,
-                          desc=f"Вставляем формулу {formula}"):
+                          desc=f"Вставляем формулу {formula} в {len(columns_with_formula)} ячеек."):
         column_letter = converter_letter(columns_number[coll_name])
         worksheet.cell(row=row, column=columns_number[coll_name]).value = \
             f"={formula}({formula_param[0]},{column_letter}{start_row}:{column_letter}{last_row})"
-    return f'Формула {formula} вставлена в {len(columns_with_formula)} ячеек.'
 
 
 def set_format_to_cell(format_cell: str,
@@ -709,21 +710,38 @@ def set_format_to_cell(format_cell: str,
                        last_row: int,
                        columns_number: dict,
                        columns_with_format: list,
-                       converter_letter: object) -> str:
+                       converter_letter: object) -> None:
     for coll_name in tqdm(columns_with_format,
                           ncols=80, ascii=True,
                           desc=f"Задаем формат {format_cell} для стобцов"):
         column_letter = converter_letter(columns_number[coll_name])
         for cell in worksheet[f"{column_letter}{start_row}:{column_letter}{last_row}"]:
             cell[0].number_format = format_cell
-    return f'Формат {format_cell} задан для {len(columns_with_format)} колонок.'
 
 
 def set_weigth_to_cell(worksheet,
                        columns_number: dict,
                        columns_with_format: dict,
-                       converter_letter: object) -> str:
-    for key in columns_with_format:
+                       converter_letter: object) -> None:
+    for key in tqdm(columns_with_format,
+                    ncols=80, ascii=True,
+                    desc=f'Задаем ширину для {len(columns_with_format)} столбцов.'):
         column_letter = converter_letter(columns_number[key])
         worksheet.column_dimensions[f'{column_letter}'].width = columns_with_format[key]
-    return f'Задана ширина для {len(columns_with_format)} столбцов.'
+
+
+def set_styles_to_cells(worksheet,
+                        start_row: int,
+                        last_row: int,
+                        column_name_left: str,
+                        column_name_right: str,
+                        columns_number: dict,
+                        converter_letter: object,
+                        styles: str) -> None:
+    column_letter_left = converter_letter(columns_number[column_name_left])
+    column_letter_right = converter_letter(columns_number[column_name_right])
+    for cells in tqdm(worksheet[f'{column_letter_left}{start_row}:{column_letter_right}{last_row}'],
+                      ncols=80, ascii=True,
+                      desc=f'Задаем стили {styles} для диапазона ячеек от {column_name_left} до {column_name_right}.'):
+        for cell in cells:
+            cell.style = styles
