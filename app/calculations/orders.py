@@ -746,21 +746,77 @@ def set_styles_to_cells(worksheet,
         for cell in cells:
             cell.style = styles
 
-def determine_ready_status_of_assembly(cutting_shop_for_assembly: int,
+def determine_ready_status_of_assembly(released: int,
+                                       cutting_shop_for_assembly: int,
+                                       cutting_shop_for_painting: int,
                                        paint_shop_for_assembly: int,
                                        painted_status: str,
                                        cutting_status: str,
-                                       percentg_of_assembly: float,
-                                       type_of_movement_cut_to_assembly: str,
-                                       type_of_movement_cut_to_paint: str,
-                                       order_division_paint: str):
+                                       percentg_of_assembly: float) -> tuple:
     assembly_ready_status = ""
     quantity_to_be_assembled = ""
-    if type_of_movement_cut_to_assembly \
-        and not type_of_movement_cut_to_paint \
-            and not order_division_paint \
-                and cutting_shop_for_assembly \
-                    and percentg_of_assembly == 0:
+
+    # Статус готов
+    if percentg_of_assembly == 1:
+        assembly_ready_status = "Готов"
+        quantity_to_be_assembled = ""
+        return assembly_ready_status, quantity_to_be_assembled
+
+    # Не крашеное / процент готовности 0%
+    if painted_status == "н/к" \
+        and cutting_shop_for_assembly \
+            and percentg_of_assembly == 0:
         assembly_ready_status = "Готов к сборке"
         quantity_to_be_assembled = cutting_shop_for_assembly
+        return assembly_ready_status, quantity_to_be_assembled
+
+    # Не крашеное / процент готовности > 0%
+    if painted_status == "н/к" \
+        and cutting_shop_for_assembly \
+            and 0 < percentg_of_assembly < 0.99:
+        assembly_ready_status = "На сборке"
+        quantity_to_be_assembled = (cutting_shop_for_assembly - released) \
+            if (cutting_shop_for_assembly - released) > 0 else ""
+        return assembly_ready_status, quantity_to_be_assembled
+
+    # Крашеное c корпусом/ процент готовности 0%
+    if painted_status == "к" \
+        and cutting_status == "есть корпус" \
+            and cutting_shop_for_assembly \
+                and paint_shop_for_assembly \
+                    and percentg_of_assembly == 0:
+        assembly_ready_status = "Готов к сборке"
+        quantity_to_be_assembled = min(cutting_shop_for_assembly, paint_shop_for_assembly)
+        return assembly_ready_status, quantity_to_be_assembled
+
+    # Крашеное c корпусом/ процент готовности > 0%
+    if painted_status == "к" \
+        and cutting_status == "есть корпус" \
+            and cutting_shop_for_assembly \
+                and paint_shop_for_assembly \
+                    and 0 < percentg_of_assembly < 0.99:
+        assembly_ready_status = "На сборке"
+        quantity_to_be_assembled = min(cutting_shop_for_assembly, paint_shop_for_assembly) - released \
+            if (min(cutting_shop_for_assembly, paint_shop_for_assembly) - released) > 0 else ""
+        return assembly_ready_status, quantity_to_be_assembled
+
+    # Крашеное без корпуса / процент готовности 0%
+    if painted_status == "к" \
+        and cutting_status == "нет корпуса" \
+            and paint_shop_for_assembly \
+                and percentg_of_assembly == 0:
+        assembly_ready_status = "Готов к сборке"
+        quantity_to_be_assembled = min(cutting_shop_for_painting ,paint_shop_for_assembly)
+        return assembly_ready_status, quantity_to_be_assembled
+
+    # Крашеное без корпуса / процент готовности > 0%
+    if painted_status == "к" \
+        and cutting_status == "нет корпуса" \
+            and paint_shop_for_assembly \
+                and 0 < percentg_of_assembly < 0.99:
+        assembly_ready_status = "На сборке"
+        quantity_to_be_assembled = min(cutting_shop_for_painting ,paint_shop_for_assembly) - released \
+            if (min(cutting_shop_for_painting ,paint_shop_for_assembly) - released) > 0 else ""
+        return assembly_ready_status, quantity_to_be_assembled
+
     return assembly_ready_status, quantity_to_be_assembled

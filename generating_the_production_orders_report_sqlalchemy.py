@@ -436,7 +436,9 @@ for value in worksheet.iter_rows(min_row=start_row, max_col=last_coll):
                 value_division = cell.value
                 if value_division:
                     cell.fill = PatternFill('solid', fgColor=green_color)
+    released = value[colums_number["Выпущено"] - 1].value
     cutting_shop_for_assembly = value[colums_number['Раскрой на буфер'] - 1].value
+    cutting_shop_for_painting = value[colums_number['Раскрой на покраску'] - 1].value
     paint_shop_for_assembly = value[colums_number['Покраска на буфер'] - 1].value
     painted_status = value[colums_number['Крашеное/не крашеное'] - 1].value
     cutting_status = value[colums_number['Наличие корпуса'] - 1].value
@@ -445,17 +447,18 @@ for value in worksheet.iter_rows(min_row=start_row, max_col=last_coll):
     type_of_movement_cut_to_paint = value[colums_number['Тип перемещения деталей, раскрой на покраску'] - 1].value
     order_division_paint = value[colums_number['Тип перемещения деталей, покраска на буфер'] - 1].value
     assembly_ready_status, quantity_to_be_assembled = determine_ready_status_of_assembly(
+        released=released,
         cutting_shop_for_assembly=cutting_shop_for_assembly,
+        cutting_shop_for_painting=cutting_shop_for_painting,
         paint_shop_for_assembly=paint_shop_for_assembly,
         painted_status=painted_status,
         cutting_status=cutting_status,
         percentg_of_assembly=percentg_of_assembly,
-        type_of_movement_cut_to_assembly=type_of_movement_cut_to_assembly,
-        type_of_movement_cut_to_paint=type_of_movement_cut_to_paint,
-        order_division_paint=order_division_paint,
     )
     value[colums_number["Статус готовности, сборка"] - 1].value = assembly_ready_status
     value[colums_number["Готово к сборке, количество"] - 1].value = quantity_to_be_assembled
+    if quantity_to_be_assembled:
+        value[colums_number["Готово к сборке, количество"] - 1].fill = PatternFill('solid', fgColor=green_color)
 # Задать формат ячеек для колонок с процентом готовности
 set_format = set_format_to_cell(
     format_cell="0%",
