@@ -745,3 +745,22 @@ def set_styles_to_cells(worksheet,
                       desc=f'Задаем стили {styles} для диапазона ячеек от {column_name_left} до {column_name_right}.'):
         for cell in cells:
             cell.style = styles
+
+def determine_ready_status_of_assembly(cutting_shop_for_assembly: int,
+                                       paint_shop_for_assembly: int,
+                                       painted_status: str,
+                                       cutting_status: str,
+                                       percentg_of_assembly: float,
+                                       type_of_movement_cut_to_assembly: str,
+                                       type_of_movement_cut_to_paint: str,
+                                       order_division_paint: str):
+    assembly_ready_status = ""
+    quantity_to_be_assembled = ""
+    if type_of_movement_cut_to_assembly \
+        and not type_of_movement_cut_to_paint \
+            and not order_division_paint \
+                and cutting_shop_for_assembly \
+                    and percentg_of_assembly == 0:
+        assembly_ready_status = "Готов к сборке"
+        quantity_to_be_assembled = cutting_shop_for_assembly
+    return assembly_ready_status, quantity_to_be_assembled

@@ -2,10 +2,11 @@ from openpyxl.styles import (Alignment, Border, Font, NamedStyle, PatternFill,
                              Side)
 
 # Стили для шапки таблицы
-
+table_head_color = '00CCFFCC'
+table_head_font_name = 'Times New Roma'
 # Стиль шрифта
 font = Font(
-    name='Calibri',
+    name=table_head_font_name,
     size=8,
     bold=False,
     italic=False,
@@ -15,7 +16,7 @@ font = Font(
     color='00000000',
 )
 # Заливка ячеек
-fill = PatternFill(fill_type='solid', fgColor="0099CCFF")
+fill = PatternFill(fill_type='solid', fgColor=table_head_color)
 # Границы ячеек
 border = Border(
     left=Side(border_style='thin', color='FF000000'),
@@ -43,7 +44,7 @@ t_head.alignment = alignment
 
 # Стиль шрифта для текстовых данных
 font = Font(
-    name='Calibri',
+    name=table_head_font_name,
     size=11,
     bold=False,
     italic=False,
@@ -76,7 +77,7 @@ td_text.alignment = alignment
 
 # Стиль шрифта для цифровых данных
 font = Font(
-    name='Calibri',
+    name=table_head_font_name,
     size=11,
     bold=False,
     italic=False,

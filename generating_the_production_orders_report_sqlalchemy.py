@@ -19,12 +19,12 @@
 from datetime import datetime
 
 from openpyxl import Workbook
-from openpyxl.styles import Border, Font, PatternFill, Side, Alignment
+from openpyxl.formatting.rule import ColorScaleRule
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import column_index_from_string, get_column_letter
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 from tqdm import tqdm
-from openpyxl.formatting.rule import ColorScaleRule
 
 from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL,
                  COLUMNS_FORMAT_PERCENTAGE, COLUMNS_WIDTH,
@@ -34,9 +34,11 @@ from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL,
                  ReportSettingsOrders, SubOrder, SubOrderReportDescription,
                  calculate_percentage_of_painting_readiness,
                  calculation_number_details_fact_paint_to_assembly,
-                 determine_if_there_is_a_painting, percentage_of_assembly,
-                 set_format_to_cell, set_formula_to_cell, set_weigth_to_cell, set_styles_to_cells)
-from app.styles_for_tables.orders_report import td_digit, td_text, t_head
+                 determine_if_there_is_a_painting,
+                 determine_ready_status_of_assembly, percentage_of_assembly,
+                 set_format_to_cell, set_formula_to_cell, set_styles_to_cells,
+                 set_weigth_to_cell)
+from app.styles_for_tables.orders_report import t_head, td_digit, td_text
 
 # Обращаемся к БД Исходные данные по заказам на производство
 start_all = datetime.now()
@@ -208,7 +210,8 @@ for order in tqdm(orders_report,
                         percentage_of_readiness_painting=percentage_of_readiness_painting,
                         number_of_details_plan_cut_to_paint=number_of_details_plan_cut_to_paint
                         )
-
+    assembly_ready_status = ""
+    quantity_to_be_assembled = ""
     # Итоговые данные отчета
     data = [
         furniture_article,
@@ -236,6 +239,8 @@ for order in tqdm(orders_report,
         order_division,
         order_launch_date,
         order_execution_date,
+        assembly_ready_status,
+        quantity_to_be_assembled,
         responsible,
         type_of_movement_cut_to_assembly,
         composite_key_cut_to_assembly,
@@ -402,29 +407,55 @@ set_weigth = set_weigth_to_cell(
     converter_letter=get_column_letter
 )
 
-
-for value in worksheet.iter_rows(min_row=start_row, max_col=colums_number['Процент готовности сборка']):
+green_color = '00339966'
+yellow_color = '00FFFF00'
+red_color = '00FF0000'
+for value in worksheet.iter_rows(min_row=start_row, max_col=last_coll):
     percentage = value[colums_number['Процент готовности сборка'] - 1].value
     if percentage >= 0.9:
         column_letter_left = get_column_letter(colums_number['Артикул'])
         column_letter_right = get_column_letter(colums_number['Наличие корпуса'])
         for cells in worksheet[f'{column_letter_left}{value[colums_number["Артикул"]].row}:{column_letter_right}{value[colums_number["Артикул"]].row}']:
             for cell in cells:
-                cell.fill = PatternFill('solid', fgColor="00008000")
+                cell.fill = PatternFill('solid', fgColor=green_color)
     if percentage < 0.9 and percentage > 0.1:
         column_letter_left = get_column_letter(colums_number['Заказано'])
         column_letter_right = get_column_letter(colums_number['Осталось выпустить'])
         for cells in worksheet[f'{column_letter_left}{value[colums_number["Артикул"]].row}:{column_letter_right}{value[colums_number["Артикул"]].row}']:
             for cell in cells:
-                cell.fill = PatternFill('solid', fgColor="00FFFF00")
+                cell.fill = PatternFill('solid', fgColor=yellow_color)
+        column_letter_left = get_column_letter(colums_number['Выпущено сборка, данные мастеров'])
+        column_letter_right = get_column_letter(colums_number['Наличие корпуса'])
+        for cells in worksheet[f'{column_letter_left}{value[colums_number["Артикул"]].row}:{column_letter_right}{value[colums_number["Артикул"]].row}']:
+            for cell in cells:
+                cell.fill = PatternFill('solid', fgColor=yellow_color)
     column_letter_left = get_column_letter(colums_number['Раскрой на буфер'])
     column_letter_right = get_column_letter(colums_number['Покраска на буфер'])
     for cells in worksheet[f'{column_letter_left}{value[colums_number["Артикул"]].row}:{column_letter_right}{value[colums_number["Артикул"]].row}']:
             for cell in cells:
                 value_division = cell.value
                 if value_division:
-                    cell.fill = PatternFill('solid', fgColor="00008000")
-
+                    cell.fill = PatternFill('solid', fgColor=green_color)
+    cutting_shop_for_assembly = value[colums_number['Раскрой на буфер'] - 1].value
+    paint_shop_for_assembly = value[colums_number['Покраска на буфер'] - 1].value
+    painted_status = value[colums_number['Крашеное/не крашеное'] - 1].value
+    cutting_status = value[colums_number['Наличие корпуса'] - 1].value
+    percentg_of_assembly = value[colums_number['Процент готовности сборка'] - 1].value
+    type_of_movement_cut_to_assembly = value[colums_number['Тип перемещения деталей, раскрой на буфер'] - 1].value
+    type_of_movement_cut_to_paint = value[colums_number['Тип перемещения деталей, раскрой на покраску'] - 1].value
+    order_division_paint = value[colums_number['Тип перемещения деталей, покраска на буфер'] - 1].value
+    assembly_ready_status, quantity_to_be_assembled = determine_ready_status_of_assembly(
+        cutting_shop_for_assembly=cutting_shop_for_assembly,
+        paint_shop_for_assembly=paint_shop_for_assembly,
+        painted_status=painted_status,
+        cutting_status=cutting_status,
+        percentg_of_assembly=percentg_of_assembly,
+        type_of_movement_cut_to_assembly=type_of_movement_cut_to_assembly,
+        type_of_movement_cut_to_paint=type_of_movement_cut_to_paint,
+        order_division_paint=order_division_paint,
+    )
+    value[colums_number["Статус готовности, сборка"] - 1].value = assembly_ready_status
+    value[colums_number["Готово к сборке, количество"] - 1].value = quantity_to_be_assembled
 # Задать формат ячеек для колонок с процентом готовности
 set_format = set_format_to_cell(
     format_cell="0%",
@@ -439,39 +470,39 @@ column_letter = get_column_letter(colums_number['Процент готовнос
 worksheet.conditional_formatting.add(f'{column_letter}{start_row}:{column_letter}{last_row}',
                                      ColorScaleRule(start_type='percentile',
                                                     start_value=0,
-                                                    start_color='00FF0000',
+                                                    start_color=red_color,
                                                     mid_type='percentile',
                                                     mid_value=50,
-                                                    mid_color='00FFFF00',
+                                                    mid_color=yellow_color,
                                                     end_type='percentile',
                                                     end_value=100,
-                                                    end_color='00008000')
+                                                    end_color=green_color)
                                                     )
 
 column_letter = get_column_letter(colums_number['Процент готовности раскрой'])
 worksheet.conditional_formatting.add(f'{column_letter}{start_row}:{column_letter}{last_row}',
                                      ColorScaleRule(start_type='percentile',
                                                     start_value=0,
-                                                    start_color='00FF0000',
+                                                    start_color=red_color,
                                                     mid_type='percentile',
                                                     mid_value=50,
-                                                    mid_color='00FFFF00',
+                                                    mid_color=yellow_color,
                                                     end_type='percentile',
                                                     end_value=100,
-                                                    end_color='00008000')
+                                                    end_color=green_color)
                                                     )
 
 column_letter = get_column_letter(colums_number['Процент готовности покраска'])
 worksheet.conditional_formatting.add(f'{column_letter}{start_row}:{column_letter}{last_row}',
                                      ColorScaleRule(start_type='percentile',
                                                     start_value=0,
-                                                    start_color='00FF0000',
+                                                    start_color=red_color,
                                                     mid_type='percentile',
                                                     mid_value=50,
-                                                    mid_color='00FFFF00',
+                                                    mid_color=yellow_color,
                                                     end_type='percentile',
                                                     end_value=100,
-                                                    end_color='00008000')
+                                                    end_color=green_color)
                                                     )
 
 # Сохранение файла
