@@ -35,7 +35,7 @@ from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL,
                  calculate_percentage_of_painting_readiness,
                  calculation_number_details_fact_paint_to_assembly,
                  determine_if_there_is_a_painting,
-                 determine_ready_status_of_assembly, percentage_of_assembly,
+                 determine_ready_status_of_assembly, calculation_percentage_of_assembly,
                  set_format_to_cell, set_formula_to_cell, set_styles_to_cells,
                  set_weigth_to_cell)
 from app.styles_for_tables.orders_report import t_head, td_digit, td_text
@@ -128,7 +128,7 @@ for order in tqdm(orders_report,
             assembly_shop = r.assembly_shop
 
     # Процент готовности сборка
-    percentg_of_assembly = percentage_of_assembly(
+    percentg_of_assembly = calculation_percentage_of_assembly(
         ordered=ordered,
         released=released,
         assembly_shop=assembly_shop
@@ -212,6 +212,10 @@ for order in tqdm(orders_report,
                         )
     assembly_ready_status = ""
     quantity_to_be_assembled = ""
+    cut_to_the_buffer_in_progress = ""
+    cutting_for_painting_in_progress = ""
+    painting_in_progress = ""
+
     # Итоговые данные отчета
     data = [
         furniture_article,
@@ -234,13 +238,16 @@ for order in tqdm(orders_report,
         percentage_of_readiness_painting,
         comment,
         contractor,
-        number_of_details_plan,
-        number_of_details_fact,
         order_division,
         order_launch_date,
         order_execution_date,
         assembly_ready_status,
         quantity_to_be_assembled,
+        cut_to_the_buffer_in_progress,
+        cutting_for_painting_in_progress,
+        painting_in_progress,
+        number_of_details_plan,
+        number_of_details_fact,
         responsible,
         type_of_movement_cut_to_assembly,
         composite_key_cut_to_assembly,
@@ -264,18 +271,20 @@ for order in tqdm(orders_report,
 worksheet = workbook[ORDERS_REPORT_MAIN_SHEET]
 
 # Вставка строки
-worksheet.insert_rows(2, 2)
+worksheet.insert_rows(2, 3)
 
 # Вставка формул
-start_row = 4
-last_row = db.query(OrderRowData.id).count() + 3
+start_row = 5
+formula_row = 3
+auto_filter = 4
+last_row = db.query(OrderRowData.id).count() + auto_filter
 
 # Установить формулу итогов в шапку таблицы
 set_formula = set_formula_to_cell(
     formula="SUBTOTAL",
     formula_param=[9],
     worksheet=worksheet,
-    row=2,
+    row=formula_row,
     start_row=start_row,
     last_row=last_row,
     columns_number=colums_number,
@@ -286,7 +295,7 @@ set_formula = set_formula_to_cell(
 # Вставка автофильтра
 last_coll = len(ORDERS_REPORT_COLUMNS_NAME)
 column_last_letter = get_column_letter(last_coll)
-worksheet.auto_filter.ref = f"A3:{column_last_letter}{last_coll}"
+worksheet.auto_filter.ref = f"A{auto_filter}:{column_last_letter}{last_coll}"
 
 # Сортировка по возрастанию для колонки Дата (от старых к новым)
 column_letter = get_column_letter(colums_number['Дата'])
@@ -308,13 +317,14 @@ for i in range(last_coll):
     column_letter = get_column_letter(i + 1)
     worksheet[f'{column_letter}1'].style = 'table_header'
     worksheet[f'{column_letter}2'].style = 'table_header'
-    worksheet[f'{column_letter}2'].font = Font(
-        name='Calibri',
+    worksheet[f'{column_letter}{formula_row}'].style = 'table_header'
+    worksheet[f'{column_letter}{formula_row}'].font = Font(
+        name='Times New Roma',
         size=11,
         bold=True,
         )
-    worksheet[f'{column_letter}3'].fill = PatternFill('solid', fgColor="00FF9900")
-    worksheet[f'{column_letter}3'].border = Border(
+    worksheet[f'{column_letter}{auto_filter}'].fill = PatternFill('solid', fgColor="00FF9900")
+    worksheet[f'{column_letter}{auto_filter}'].border = Border(
         left=Side(border_style='thin', color='FF000000'),
         right=Side(border_style='thin', color='FF000000'),
         top=Side(border_style='thin', color='FF000000'),
@@ -424,11 +434,15 @@ for value in worksheet.iter_rows(min_row=start_row, max_col=last_coll):
         for cells in worksheet[f'{column_letter_left}{value[colums_number["Артикул"]].row}:{column_letter_right}{value[colums_number["Артикул"]].row}']:
             for cell in cells:
                 cell.fill = PatternFill('solid', fgColor=yellow_color)
+
+
         column_letter_left = get_column_letter(colums_number['Выпущено сборка, данные мастеров'])
         column_letter_right = get_column_letter(colums_number['Наличие корпуса'])
         for cells in worksheet[f'{column_letter_left}{value[colums_number["Артикул"]].row}:{column_letter_right}{value[colums_number["Артикул"]].row}']:
             for cell in cells:
                 cell.fill = PatternFill('solid', fgColor=yellow_color)
+
+
     column_letter_left = get_column_letter(colums_number['Раскрой на буфер'])
     column_letter_right = get_column_letter(colums_number['Покраска на буфер'])
     for cells in worksheet[f'{column_letter_left}{value[colums_number["Артикул"]].row}:{column_letter_right}{value[colums_number["Артикул"]].row}']:
@@ -436,6 +450,8 @@ for value in worksheet.iter_rows(min_row=start_row, max_col=last_coll):
                 value_division = cell.value
                 if value_division:
                     cell.fill = PatternFill('solid', fgColor=green_color)
+
+    # Расчеты для колонок готовности
     released = value[colums_number["Выпущено"] - 1].value
     cutting_shop_for_assembly = value[colums_number['Раскрой на буфер'] - 1].value
     cutting_shop_for_painting = value[colums_number['Раскрой на покраску'] - 1].value
@@ -443,6 +459,7 @@ for value in worksheet.iter_rows(min_row=start_row, max_col=last_coll):
     painted_status = value[colums_number['Крашеное/не крашеное'] - 1].value
     cutting_status = value[colums_number['Наличие корпуса'] - 1].value
     percentg_of_assembly = value[colums_number['Процент готовности сборка'] - 1].value
+    percentage_of_readiness_to_cut = value[colums_number["Процент готовности раскрой"] - 1].value
     type_of_movement_cut_to_assembly = value[colums_number['Тип перемещения деталей, раскрой на буфер'] - 1].value
     type_of_movement_cut_to_paint = value[colums_number['Тип перемещения деталей, раскрой на покраску'] - 1].value
     order_division_paint = value[colums_number['Тип перемещения деталей, покраска на буфер'] - 1].value
@@ -454,14 +471,16 @@ for value in worksheet.iter_rows(min_row=start_row, max_col=last_coll):
         painted_status=painted_status,
         cutting_status=cutting_status,
         percentg_of_assembly=percentg_of_assembly,
+        percentage_of_readiness_to_cut=percentage_of_readiness_to_cut,
     )
     value[colums_number["Статус готовности, сборка"] - 1].value = assembly_ready_status
     value[colums_number["Готово к сборке, количество"] - 1].value = quantity_to_be_assembled
     if quantity_to_be_assembled:
         value[colums_number["Готово к сборке, количество"] - 1].fill = PatternFill('solid', fgColor=green_color)
+
 # Задать формат ячеек для колонок с процентом готовности
 set_format = set_format_to_cell(
-    format_cell="0%",
+    format_cell="0.0%",
     worksheet=worksheet,
     start_row=start_row,
     last_row=last_row,

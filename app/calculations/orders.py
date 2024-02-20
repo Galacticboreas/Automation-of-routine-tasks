@@ -527,7 +527,7 @@ class Bunch(dict):
         self.__dict__ = self
 
 
-def percentage_of_assembly(ordered: int,
+def calculation_percentage_of_assembly(ordered: int,
                            released: int,
                            assembly_shop: int) -> float:
     """Функция расчитывает процент готовности сборки
@@ -752,7 +752,8 @@ def determine_ready_status_of_assembly(released: int,
                                        paint_shop_for_assembly: int,
                                        painted_status: str,
                                        cutting_status: str,
-                                       percentg_of_assembly: float) -> tuple:
+                                       percentg_of_assembly: float,
+                                       percentage_of_readiness_to_cut: float) -> tuple:
     assembly_ready_status = ""
     quantity_to_be_assembled = ""
 
@@ -773,7 +774,7 @@ def determine_ready_status_of_assembly(released: int,
     # Не крашеное / процент готовности > 0%
     if painted_status == "н/к" \
         and cutting_shop_for_assembly \
-            and 0 < percentg_of_assembly < 0.99:
+            and 0 < percentg_of_assembly < 0.999:
         assembly_ready_status = "На сборке"
         quantity_to_be_assembled = (cutting_shop_for_assembly - released) \
             if (cutting_shop_for_assembly - released) > 0 else ""
@@ -794,7 +795,7 @@ def determine_ready_status_of_assembly(released: int,
         and cutting_status == "есть корпус" \
             and cutting_shop_for_assembly \
                 and paint_shop_for_assembly \
-                    and 0 < percentg_of_assembly < 0.99:
+                    and 0 < percentg_of_assembly < 0.999:
         assembly_ready_status = "На сборке"
         quantity_to_be_assembled = min(cutting_shop_for_assembly, paint_shop_for_assembly) - released \
             if (min(cutting_shop_for_assembly, paint_shop_for_assembly) - released) > 0 else ""
@@ -813,10 +814,37 @@ def determine_ready_status_of_assembly(released: int,
     if painted_status == "к" \
         and cutting_status == "нет корпуса" \
             and paint_shop_for_assembly \
-                and 0 < percentg_of_assembly < 0.99:
+                and 0 < percentg_of_assembly < 0.999:
         assembly_ready_status = "На сборке"
         quantity_to_be_assembled = min(cutting_shop_for_painting ,paint_shop_for_assembly) - released \
             if (min(cutting_shop_for_painting ,paint_shop_for_assembly) - released) > 0 else ""
         return assembly_ready_status, quantity_to_be_assembled
+
+    # Развёрнутые заказы
+    if percentg_of_assembly == 0 \
+            and percentage_of_readiness_to_cut == 0:
+        assembly_ready_status = "Развернут"
+        return assembly_ready_status, quantity_to_be_assembled
+    
+    # Не развурнутые заказы
+    if percentg_of_assembly == 0 \
+            and percentage_of_readiness_to_cut == "не развернут" \
+                and not cutting_shop_for_assembly \
+                    and not cutting_shop_for_painting \
+                        and not paint_shop_for_assembly:
+        assembly_ready_status = "Не развернут"
+        return assembly_ready_status, quantity_to_be_assembled
+
+    # В работе раскрой покраска
+    if not type(percentage_of_readiness_to_cut) == str:
+        if percentg_of_assembly == 0 \
+            and percentage_of_readiness_to_cut > 0 \
+                and not assembly_ready_status == "Готов" \
+                    and not assembly_ready_status == "Готов к сборке" \
+                        and not assembly_ready_status == "На сборке" \
+                            and not assembly_ready_status == "Развернут" \
+                                and not assembly_ready_status == "Не развернут":
+            assembly_ready_status = "В работе"
+            return assembly_ready_status, quantity_to_be_assembled
 
     return assembly_ready_status, quantity_to_be_assembled
