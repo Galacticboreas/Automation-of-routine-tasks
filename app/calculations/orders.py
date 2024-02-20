@@ -746,6 +746,7 @@ def set_styles_to_cells(worksheet,
         for cell in cells:
             cell.style = styles
 
+
 def determine_ready_status_of_assembly(released: int,
                                        cutting_shop_for_assembly: int,
                                        cutting_shop_for_painting: int,
@@ -754,6 +755,30 @@ def determine_ready_status_of_assembly(released: int,
                                        cutting_status: str,
                                        percentg_of_assembly: float,
                                        percentage_of_readiness_to_cut: float) -> tuple:
+    """Функция определяет статус готовности заказа и расчитывает количество
+    комплектов готовых к сборке.
+    Статусы:
+            Готов
+            Готов к сборке
+            На сборке
+            В работе
+            Развернут
+            Не развернут
+
+    Args:
+        released (int): [Выпущено комплектов на склад ГП]
+        cutting_shop_for_assembly (int): [Выпущено комплектов с раскроя на буфер]
+        cutting_shop_for_painting (int): [Выпущено комплектов с раскроя на покраску]
+        paint_shop_for_assembly (int): [Выпущено комплектов с покраски]
+        painted_status (str): [Статус покраски: крашеное/не крашеное]
+        cutting_status (str): [Статус корпус: есть корпус/нет корпуса]
+        percentg_of_assembly (float): [Процент готовности по сборке]
+        percentage_of_readiness_to_cut (float): [Процент готовности по раскрою]
+
+    Returns:
+        tuple [str, int]: [assembly_ready_status = Статус готовности (str),
+                           quantity_to_be_assembled = количество (int)]
+    """
     assembly_ready_status = ""
     quantity_to_be_assembled = ""
 
