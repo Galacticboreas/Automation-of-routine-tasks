@@ -873,3 +873,49 @@ def determine_ready_status_of_assembly(released: int,
             return assembly_ready_status, quantity_to_be_assembled
 
     return assembly_ready_status, quantity_to_be_assembled
+
+
+def calc_number_products_cutting_and_painting_workshops(
+        ordered: int,
+        cutting_shop_for_assembly: int,
+        cutting_shop_for_painting: int,
+        paint_shop_for_assembly: int,
+        painted_status: str,
+        cutting_status: str,
+        percentg_of_assembly: float,
+        percentage_of_readiness_to_cut: float,
+        assembly_ready_status: str) -> tuple[int, int, int]:
+    cut_to_the_buffer_in_progress = ""
+    cutting_for_painting_in_progress = ""
+    painting_in_progress = ""
+
+    # Не крашеные в работе
+    if painted_status == "н/к" and assembly_ready_status == "В работе":
+        cut_to_the_buffer_in_progress = ordered - cutting_shop_for_assembly
+        return cut_to_the_buffer_in_progress, \
+            cutting_for_painting_in_progress, painting_in_progress
+
+    # Крашеные c корпусом в работе
+    if painted_status == "к" and cutting_status == "есть корпус" \
+        and assembly_ready_status == "В работе":
+            if cutting_shop_for_assembly < ordered:
+                cut_to_the_buffer_in_progress = ordered - cutting_shop_for_assembly
+            if cutting_shop_for_painting < ordered:
+                cutting_for_painting_in_progress = ordered - cutting_shop_for_painting
+            if paint_shop_for_assembly < cutting_shop_for_painting:
+                painting_in_progress = ordered - paint_shop_for_assembly
+            return cut_to_the_buffer_in_progress, \
+        cutting_for_painting_in_progress, painting_in_progress
+
+    # Крешеные без корпуса
+    if painted_status == "к" and cutting_status == "нет корпуса" \
+        and assembly_ready_status == "В работе":
+            if cutting_shop_for_painting < ordered:
+                cutting_for_painting_in_progress = ordered - cutting_shop_for_painting
+            if paint_shop_for_assembly < cutting_shop_for_painting:
+                painting_in_progress = ordered - paint_shop_for_assembly
+            return cut_to_the_buffer_in_progress, \
+        cutting_for_painting_in_progress, painting_in_progress
+
+    return cut_to_the_buffer_in_progress, \
+        cutting_for_painting_in_progress, painting_in_progress

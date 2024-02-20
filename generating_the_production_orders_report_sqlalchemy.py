@@ -32,12 +32,13 @@ from app import (COLUMNS_FOR_INSERTING_FORMULAS_SUBTOTAL,
                  DescriptionMainOrderRowData, MonitorForWorkCenters,
                  OrderRowData, ReleaseOfAssemblyKitsRowData,
                  ReportSettingsOrders, SubOrder, SubOrderReportDescription,
+                 calc_number_products_cutting_and_painting_workshops,
                  calculate_percentage_of_painting_readiness,
                  calculation_number_details_fact_paint_to_assembly,
+                 calculation_percentage_of_assembly,
                  determine_if_there_is_a_painting,
-                 determine_ready_status_of_assembly, calculation_percentage_of_assembly,
-                 set_format_to_cell, set_formula_to_cell, set_styles_to_cells,
-                 set_weigth_to_cell)
+                 determine_ready_status_of_assembly, set_format_to_cell,
+                 set_formula_to_cell, set_styles_to_cells, set_weigth_to_cell)
 from app.styles_for_tables.orders_report import t_head, td_digit, td_text
 
 # Обращаемся к БД Исходные данные по заказам на производство
@@ -420,7 +421,12 @@ set_weigth = set_weigth_to_cell(
 green_color = '00339966'
 yellow_color = '00FFFF00'
 red_color = '00FF0000'
-for value in worksheet.iter_rows(min_row=start_row, max_col=last_coll):
+
+# Основные расчеты по заказам
+for value in tqdm(worksheet.iter_rows(min_row=start_row, max_col=last_coll),
+                  ncols=80,
+                  ascii=True,
+                  desc="Основные расчеты по заказам"):
     percentage = value[colums_number['Процент готовности сборка'] - 1].value
     if percentage >= 0.9:
         column_letter_left = get_column_letter(colums_number['Артикул'])
@@ -451,7 +457,8 @@ for value in worksheet.iter_rows(min_row=start_row, max_col=last_coll):
                 if value_division:
                     cell.fill = PatternFill('solid', fgColor=green_color)
 
-    # Расчеты для колонок готовности
+    # Расчеты для колонок: (Статус готовности, сборка) и (Готово к сборке, количество)
+    ordered = value[colums_number["Заказано"] - 1].value
     released = value[colums_number["Выпущено"] - 1].value
     cutting_shop_for_assembly = value[colums_number['Раскрой на буфер'] - 1].value
     cutting_shop_for_painting = value[colums_number['Раскрой на покраску'] - 1].value
@@ -463,6 +470,8 @@ for value in worksheet.iter_rows(min_row=start_row, max_col=last_coll):
     type_of_movement_cut_to_assembly = value[colums_number['Тип перемещения деталей, раскрой на буфер'] - 1].value
     type_of_movement_cut_to_paint = value[colums_number['Тип перемещения деталей, раскрой на покраску'] - 1].value
     order_division_paint = value[colums_number['Тип перемещения деталей, покраска на буфер'] - 1].value
+    
+    # Определяем статус готовности изделия и количество к сборке
     assembly_ready_status, quantity_to_be_assembled = determine_ready_status_of_assembly(
         released=released,
         cutting_shop_for_assembly=cutting_shop_for_assembly,
@@ -473,10 +482,36 @@ for value in worksheet.iter_rows(min_row=start_row, max_col=last_coll):
         percentg_of_assembly=percentg_of_assembly,
         percentage_of_readiness_to_cut=percentage_of_readiness_to_cut,
     )
+
+    # Записываем данные в ячейки
     value[colums_number["Статус готовности, сборка"] - 1].value = assembly_ready_status
     value[colums_number["Готово к сборке, количество"] - 1].value = quantity_to_be_assembled
+    
     if quantity_to_be_assembled:
         value[colums_number["Готово к сборке, количество"] - 1].fill = PatternFill('solid', fgColor=green_color)
+
+    cut_to_the_buffer_in_progress, \
+        cutting_for_painting_in_progress, \
+            painting_in_progress = calc_number_products_cutting_and_painting_workshops(
+                ordered=ordered,
+                cutting_shop_for_assembly=cutting_shop_for_assembly,
+                cutting_shop_for_painting=cutting_shop_for_painting,
+                paint_shop_for_assembly=paint_shop_for_assembly,
+                painted_status=painted_status,
+                cutting_status=cutting_status,
+                percentg_of_assembly=percentg_of_assembly,
+                percentage_of_readiness_to_cut=percentage_of_readiness_to_cut,
+                assembly_ready_status=assembly_ready_status,
+            )
+    value[colums_number["Раскрой на буфер, в работе"] - 1].value = cut_to_the_buffer_in_progress
+    if cut_to_the_buffer_in_progress:
+        value[colums_number["Раскрой на буфер, в работе"] - 1].fill = PatternFill('solid', fgColor=green_color)
+    value[colums_number["Раскрой на покраску, в работе"] - 1].value = cutting_for_painting_in_progress
+    if cutting_for_painting_in_progress:
+        value[colums_number["Раскрой на покраску, в работе"] - 1].fill = PatternFill('solid', fgColor=green_color)
+    value[colums_number["Покраска, в работе"] - 1].value = painting_in_progress
+    if painting_in_progress:
+        value[colums_number["Покраска, в работе"] - 1].fill = PatternFill('solid', fgColor=green_color)
 
 # Задать формат ячеек для колонок с процентом готовности
 set_format = set_format_to_cell(
@@ -488,6 +523,8 @@ set_format = set_format_to_cell(
     columns_with_format=COLUMNS_FORMAT_PERCENTAGE,
     converter_letter=get_column_letter,
 )
+
+# Условное форматирование стобца с процентами
 column_letter = get_column_letter(colums_number['Процент готовности сборка'])
 worksheet.conditional_formatting.add(f'{column_letter}{start_row}:{column_letter}{last_row}',
                                      ColorScaleRule(start_type='percentile',
@@ -501,6 +538,7 @@ worksheet.conditional_formatting.add(f'{column_letter}{start_row}:{column_letter
                                                     end_color=green_color)
                                                     )
 
+# Условное форматирование стобца с процентами
 column_letter = get_column_letter(colums_number['Процент готовности раскрой'])
 worksheet.conditional_formatting.add(f'{column_letter}{start_row}:{column_letter}{last_row}',
                                      ColorScaleRule(start_type='percentile',
@@ -514,6 +552,7 @@ worksheet.conditional_formatting.add(f'{column_letter}{start_row}:{column_letter
                                                     end_color=green_color)
                                                     )
 
+# Условное форматирование стобца с процентами
 column_letter = get_column_letter(colums_number['Процент готовности покраска'])
 worksheet.conditional_formatting.add(f'{column_letter}{start_row}:{column_letter}{last_row}',
                                      ColorScaleRule(start_type='percentile',

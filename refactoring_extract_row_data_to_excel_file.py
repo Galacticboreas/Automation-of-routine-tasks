@@ -97,3 +97,8 @@ if __name__ == '__main__':
     total_time = (end - start).total_seconds()
     print(f"Время на сохранение данных: {total_time} с")
     print("Программа завершена!")
+
+
+def calc_number_products_cutting_and_painting_workshops() -> tuple[int, int, int]:
+    pass
+    return
