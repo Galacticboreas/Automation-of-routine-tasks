@@ -877,6 +877,8 @@ def determine_ready_status_of_assembly(released: int,
 
 def calc_number_products_cutting_and_painting_workshops(
         ordered: int,
+        released: int,
+        remains_to_release: int,
         cutting_shop_for_assembly: int,
         cutting_shop_for_painting: int,
         paint_shop_for_assembly: int,
@@ -916,6 +918,41 @@ def calc_number_products_cutting_and_painting_workshops(
                 painting_in_progress = ordered - paint_shop_for_assembly
             return cut_to_the_buffer_in_progress, \
         cutting_for_painting_in_progress, painting_in_progress
+    
+    # Не крашеные на сборке
+    if painted_status == "н/к" and assembly_ready_status == "На сборке":
+        if cutting_shop_for_assembly - released < remains_to_release \
+            and released < cutting_shop_for_assembly:
+            cut_to_the_buffer_in_progress = remains_to_release - (cutting_shop_for_assembly - released)
+            return cut_to_the_buffer_in_progress, \
+                cutting_for_painting_in_progress, painting_in_progress
+    
+    # Крашеные с корпусом на сборке
+    if painted_status == "к" and cutting_status == "есть корпус" \
+        and assembly_ready_status == "На сборке":
+            if cutting_shop_for_assembly - released < remains_to_release \
+                and released < cutting_shop_for_assembly:
+                    cut_to_the_buffer_in_progress = remains_to_release - (cutting_shop_for_assembly - released)
+            if cutting_shop_for_painting - released < remains_to_release \
+                and released < cutting_shop_for_painting:
+                cutting_for_painting_in_progress = remains_to_release - (cutting_shop_for_painting - released)
+            if paint_shop_for_assembly - released < remains_to_release \
+                and released < paint_shop_for_assembly:
+                painting_in_progress = remains_to_release - (paint_shop_for_assembly - released)
+            return cut_to_the_buffer_in_progress, \
+                cutting_for_painting_in_progress, painting_in_progress
+    
+    # Крешеные без корпуса на сборке
+    if painted_status == "к" and cutting_status == "нет корпуса" \
+        and assembly_ready_status == "На сборке":
+            if cutting_shop_for_painting - released < remains_to_release \
+                and released < cutting_shop_for_painting:
+                cutting_for_painting_in_progress = remains_to_release - (cutting_shop_for_painting - released)
+            if paint_shop_for_assembly - released < remains_to_release \
+                and released < paint_shop_for_assembly:
+                painting_in_progress = remains_to_release - (paint_shop_for_assembly - released)
+            return cut_to_the_buffer_in_progress, \
+                cutting_for_painting_in_progress, painting_in_progress
 
     return cut_to_the_buffer_in_progress, \
         cutting_for_painting_in_progress, painting_in_progress

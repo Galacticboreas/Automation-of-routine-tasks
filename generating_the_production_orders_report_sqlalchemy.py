@@ -460,6 +460,7 @@ for value in tqdm(worksheet.iter_rows(min_row=start_row, max_col=last_coll),
     # Расчеты для колонок: (Статус готовности, сборка) и (Готово к сборке, количество)
     ordered = value[colums_number["Заказано"] - 1].value
     released = value[colums_number["Выпущено"] - 1].value
+    remains_to_release = value[colums_number["Осталось выпустить"] - 1].value
     cutting_shop_for_assembly = value[colums_number['Раскрой на буфер'] - 1].value
     cutting_shop_for_painting = value[colums_number['Раскрой на покраску'] - 1].value
     paint_shop_for_assembly = value[colums_number['Покраска на буфер'] - 1].value
@@ -494,6 +495,8 @@ for value in tqdm(worksheet.iter_rows(min_row=start_row, max_col=last_coll),
         cutting_for_painting_in_progress, \
             painting_in_progress = calc_number_products_cutting_and_painting_workshops(
                 ordered=ordered,
+                released=released,
+                remains_to_release=remains_to_release,
                 cutting_shop_for_assembly=cutting_shop_for_assembly,
                 cutting_shop_for_painting=cutting_shop_for_painting,
                 paint_shop_for_assembly=paint_shop_for_assembly,
