@@ -502,8 +502,6 @@ for value in tqdm(worksheet.iter_rows(min_row=start_row, max_col=last_coll),
                 paint_shop_for_assembly=paint_shop_for_assembly,
                 painted_status=painted_status,
                 cutting_status=cutting_status,
-                percentg_of_assembly=percentg_of_assembly,
-                percentage_of_readiness_to_cut=percentage_of_readiness_to_cut,
                 assembly_ready_status=assembly_ready_status,
             )
     value[colums_number["Раскрой на буфер, в работе"] - 1].value = cut_to_the_buffer_in_progress

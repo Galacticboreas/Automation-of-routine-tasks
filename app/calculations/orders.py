@@ -884,9 +884,35 @@ def calc_number_products_cutting_and_painting_workshops(
         paint_shop_for_assembly: int,
         painted_status: str,
         cutting_status: str,
-        percentg_of_assembly: float,
-        percentage_of_readiness_to_cut: float,
         assembly_ready_status: str) -> tuple[int, int, int]:
+    """Функция определяет количество комплектов, которые
+    необходимо произвести для полной готовности заказа.
+    Участки:
+            - раскрой на буфер;
+            - раскрой на покраску;
+            - покраска на буфер.
+
+    Args:
+        ordered (int): [Заказано]
+        released (int): [Выпущено]
+        remains_to_release (int): [Осталось выпустить]
+        cutting_shop_for_assembly (int): [Выпущено комплектов на буфер]
+        cutting_shop_for_painting (int): [Выпущено комплектов раскрой на покраску]
+        paint_shop_for_assembly (int): [Выпущено комплектов с покраски]
+        painted_status (str): [Статус изделия: крашеное/не крашеное]
+        cutting_status (str): [Наличие корпуса: есть корпус/нет корпуса]
+        assembly_ready_status (str): [Статус готовности:
+                                            - в работе;
+                                            - готово к сборке;
+                                            - на сборке;
+                                            - развернут;
+                                            - не развернут]
+
+    Returns:
+        tuple[int, int, int]: [В работе раскрой на буфер: int,
+                               в работе раскрой на покраску: int,
+                               в работе покраска: int]
+    """
     cut_to_the_buffer_in_progress = 0
     cutting_for_painting_in_progress = 0
     painting_in_progress = 0
