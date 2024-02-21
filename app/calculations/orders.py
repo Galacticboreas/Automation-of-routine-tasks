@@ -885,19 +885,19 @@ def calc_number_products_cutting_and_painting_workshops(
         percentg_of_assembly: float,
         percentage_of_readiness_to_cut: float,
         assembly_ready_status: str) -> tuple[int, int, int]:
-    cut_to_the_buffer_in_progress = ""
-    cutting_for_painting_in_progress = ""
-    painting_in_progress = ""
+    cut_to_the_buffer_in_progress = 0
+    cutting_for_painting_in_progress = 0
+    painting_in_progress = 0
 
     # Не крашеные в работе
-    if painted_status == "н/к" and assembly_ready_status == "В работе":
+    if painted_status == "н/к" and (assembly_ready_status == "В работе" or assembly_ready_status == "Готов к сборке"):
         cut_to_the_buffer_in_progress = ordered - cutting_shop_for_assembly
         return cut_to_the_buffer_in_progress, \
             cutting_for_painting_in_progress, painting_in_progress
 
     # Крашеные c корпусом в работе
     if painted_status == "к" and cutting_status == "есть корпус" \
-        and assembly_ready_status == "В работе":
+        and (assembly_ready_status == "В работе" or assembly_ready_status == "Готов к сборке"):
             if cutting_shop_for_assembly < ordered:
                 cut_to_the_buffer_in_progress = ordered - cutting_shop_for_assembly
             if cutting_shop_for_painting < ordered:
@@ -907,9 +907,9 @@ def calc_number_products_cutting_and_painting_workshops(
             return cut_to_the_buffer_in_progress, \
         cutting_for_painting_in_progress, painting_in_progress
 
-    # Крешеные без корпуса
+    # Крашеные без корпуса в работе
     if painted_status == "к" and cutting_status == "нет корпуса" \
-        and assembly_ready_status == "В работе":
+        and (assembly_ready_status == "В работе" or assembly_ready_status == "Готов к сборке"):
             if cutting_shop_for_painting < ordered:
                 cutting_for_painting_in_progress = ordered - cutting_shop_for_painting
             if paint_shop_for_assembly < cutting_shop_for_painting:

@@ -78,11 +78,10 @@ COLUMNS_FORMAT_PERCENTAGE = [
     "Процент готовности, покраска на буфер",
 ]
 
-standart_width = 8
+standart_width = 7
 composite_key = 10
-date_width = 11
-furniture_name = 50
-composite_key = 10
+date_width = 10
+furniture_name = 45
 COLUMNS_WIDTH = {
     "Артикул": standart_width,
     "Композитный ключ": composite_key,
