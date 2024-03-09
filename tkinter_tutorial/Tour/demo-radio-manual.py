@@ -24,6 +24,6 @@ for i in range(10):
     rad.pack(side=LEFT)
     buttons.append(rad)
 
-onPress(0)
+onPress(0)         # первоначально выбрать первый переключатель
 root.mainloop()
-print(state)
+print(state)       # вывести информацию о состоянии перед выходом
