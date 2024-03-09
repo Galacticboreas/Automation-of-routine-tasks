@@ -58,3 +58,4 @@ widget.focus()                                # или привязать наж
                                               # к tkroot
 tkroot.title('Click Me')
 tkroot.mainloop()
+
