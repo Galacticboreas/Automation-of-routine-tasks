@@ -23,7 +23,7 @@ os.popen(), и к томму же цель этого модуля состои�
 
 import sys, os
 
-pyfile = (sys.platform[:3] == 'win' and 'python.exe') or 'python'
+pyfile = (sys.platform[:3] == 'win32' and 'python.exe') or 'python'
 pypath = sys.executable      # использовать sys в последних версиях Python
 
 def fixWindowsPath(cmdline):
@@ -104,7 +104,7 @@ class Start(LaunchMode):
     """
 
     def run(self, cmdline):
-        assert sys.platform[:3] == 'win'
+        assert sys.platform[:3] == 'win32'
         cmdline = fixWindowsPath(cmdline)
         os.startfile(cmdline)
 
@@ -116,7 +116,7 @@ class StartArgs(LaunchMode):
     """
 
     def run(self, cmdline):
-        assert sys.platform[:3] == 'win'
+        assert sys.platform[:3] == 'win32'
         os.system('start ' + cmdline)    # может создать окно консоли
 
 
@@ -145,7 +145,7 @@ class Top_level(LaunchMode):
 # возможно, выбор придется уточнить в других местах
 # 
 
-if sys.platform[:3] == 'win':
+if sys.platform[:3] == 'win32':
     PortableLauncher = Spawn
 else:
     PortableLauncher = Fork
