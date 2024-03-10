@@ -10,4 +10,18 @@ multiptocessing;
 from tkinter import *
 from multiprocessing import Process
 
-demoModules = []
+demoModules = ['demoDlg', 'demoRadio', 'demoCheck', 'demoScale']
+
+def runDemo(modname):              # запускает в новом процессе
+    module = __import__(modname)   # создать GUI с нуля
+    module.Demo().mainloop()
+
+if __name__ == '__main__':
+    for modname in demoModules:    # только в __main__!
+        Process(target=runDemo, args=(modname,)).start()
+
+    root = Tk()
+    root.title('Processes')
+    Label(root, text='Multiple program demo: multiprocessing',
+          bg='white').pack()
+    root.mainloop()
