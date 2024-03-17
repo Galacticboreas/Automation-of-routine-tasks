@@ -1,10 +1,4 @@
-# !/usr/local/bin/python
-"""
-главное меню окна в стиле Tk8.0
-строка меню и панель инструментов прикрепляются к окну в первую очередь, fill=X
-(прикрепить первым = обрезать последним); добавляет изображения в элементы меню;
-смотрите также: add_checkbutton, add_radiobutton
-"""
+# изменяет размеры изображений для кнопок на панели инструментов с помощью PIL
 
 from tkinter import *                  # импортировать базовый набор виджетов
 from tkinter.messagebox import *       # импортировать стандартные диалоги
@@ -28,11 +22,21 @@ class NewMenuDemo(Frame):              # расширенный фрейм
         L.pack(expand=YES, fill=BOTH)
 
     
-    def makeToolBar(self):
+    def makeToolBar(self, size=(40, 40)):
+        imgdir = r'resources/'
         toolbar = Frame(self, cursor='hand2', relief=SUNKEN, bd=2)
         toolbar.pack(side=BOTTOM, fill=X)
-        Button(toolbar, text='Quit', command=self.quit).pack(side=RIGHT)
-        Button(toolbar, text='Hello', command=self.greeting).pack(side=LEFT)
+        photos = ('ora-lp4e.gif', 'pythonPowered.gif',
+                  'python_conf_ora.gif')
+        self.toolPhotoObjs = []
+        for file in photos:
+            img = PhotoImage(file=imgdir + file)
+            btn = Button(toolbar, image=img, command=self.greeting)
+            btn.config(bd=5, relief=RIDGE)
+            btn.config(width=size[0], height=size[1])
+            btn.pack(side=LEFT)
+            self.toolPhotoObjs.append(img)      # сохранить ссылку
+        Button(toolbar, text='Quit', command=self.quit).pack(side=RIGHT, fill=Y)
 
     
     def makeMenuBar(self):
