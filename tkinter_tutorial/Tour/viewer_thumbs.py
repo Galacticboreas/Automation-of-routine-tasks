@@ -10,7 +10,7 @@ from tkinter import *
 from PIL import Image                   # <== required for thumbs
 from PIL.ImageTk import PhotoImage      # <== required for JPEG display
 
-def makeThumbs(imgdir, size=(100, 100), subdir='thumbs'):
+def makeThumbs(imgdir, size=(100, 100), subdir=''):
     """
     получить уменьшенные изображения для всех изображений в каталоге; для
     каждого изображения создайте и сохраните новый thumb или загрузите и
@@ -88,6 +88,6 @@ def viewer(imgdir, kind=Toplevel, cols=None):
     return win, savephotos
 
 if __name__ == '__main__':
-    imgdir = (len(sys.argv) > 1 and sys.argv[1]) or 'images'
+    imgdir = (len(sys.argv) > 1 and sys.argv[1]) or 'resources/'
     main, save = viewer(imgdir, kind=Tk)
     main.mainloop()
